@@ -9,6 +9,7 @@ import {
   type Puzzle,
   type Stats,
 } from "@/lib/engine";
+import { X, Check } from "lucide-react";
 import { SectionLabel } from "./ui/SectionLabel";
 import { PrimaryButton } from "./ui/buttons";
 
@@ -55,21 +56,21 @@ export function ResultsOverlay({ puzzle, board, won, free, stats, copied, onClos
                 : "The target recipe is revealed below."}
             </div>
           </div>
-          <button onClick={onClose} className="border-none bg-transparent text-[22px] leading-none text-sub cursor-pointer px-1 py-0.5">
-            ✕
+          <button onClick={onClose} aria-label="Close" className="border-none bg-transparent leading-none text-sub cursor-pointer px-1 py-0.5">
+            <X size={22} />
           </button>
         </div>
 
         <SectionLabel className="mt-[22px] mb-2.5">THE RECIPE</SectionLabel>
         <div className="flex gap-1.5">
           {puzzle.canonical.map((id, i) => (
-            <div key={i} className="flex-1">
+            <div key={i} style={{ flexGrow: puzzle.weights[i], flexBasis: 0 }}>
               <div className="h-12 border border-line rounded-card" style={{ background: rgbToCss(pureMix(id)) }} />
               <div className="font-mono text-[9px] text-sub text-center mt-1">{getPigment(id).code.split("-")[0]}</div>
             </div>
           ))}
         </div>
-        <div className="text-[13px] text-sub mt-3">{recipeText(puzzle.canonical)}</div>
+        <div className="text-[13px] text-sub mt-3">{recipeText(puzzle.canonical, puzzle.weights)}</div>
 
         <div className="flex gap-2 mt-6 mb-1.5">
           <Stat value={stats.played || 0} label="PLAYED" />
@@ -101,8 +102,8 @@ export function ResultsOverlay({ puzzle, board, won, free, stats, copied, onClos
         <div className="font-mono text-[13px] whitespace-pre leading-[1.5] bg-ground border border-line rounded-card py-3.5 px-4 mt-6 mb-3.5 overflow-x-auto">
           {shareText}
         </div>
-        <PrimaryButton onClick={() => onShare(shareText)} className="w-full text-[13px] tracking-[0.1em] py-[15px]">
-          {copied ? "COPIED ✓" : "SHARE RESULT"}
+        <PrimaryButton onClick={() => onShare(shareText)} className="w-full inline-flex items-center justify-center gap-1.5 text-[13px] tracking-[0.1em] py-[15px]">
+          {copied ? (<><Check size={15} /> COPIED</>) : "SHARE RESULT"}
         </PrimaryButton>
       </div>
     </div>

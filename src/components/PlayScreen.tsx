@@ -1,10 +1,10 @@
+import { Delete, CornerDownLeft } from "lucide-react";
 import {
-  clueIcon,
   fgFor,
   getPigment,
   pureMix,
   rgbToCss,
-  DOSES,
+  CELLS,
   GUESSES,
   type BoardEntry,
   type Clue,
@@ -13,6 +13,7 @@ import {
 import { useKeyLabels } from "@/lib/keyboard";
 import { ClueLegend } from "./ClueLegend";
 import { SectionLabel } from "./ui/SectionLabel";
+import { hasClueIcon } from "./ui/ClueIcon";
 import { PrimaryButton } from "./ui/buttons";
 import { PaletteChip } from "./PaletteChip";
 import { GuessRow, type RowCell } from "./GuessRow";
@@ -31,19 +32,25 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
   const keyLabels = useKeyLabels();
   const best = board.length ? Math.max(...board.map((b) => b.fb.matchPercent)) : 0;
   const gaugeFill = `hsl(${Math.round(best * 1.2)},62%,46%)`;
-  const compFull = composition.length >= DOSES;
-  const canGuess = composition.length === DOSES && !finished;
+  const compFull = composition.length >= CELLS;
+  const canGuess = composition.length === CELLS && !finished;
+  const weights = puzzle.weights;
 
+  // Per-pigment guidance. A pigment that ever earned a green or yellow clue is
+  // confirmed to be in the recipe. A pigment that earned a grey clue but never
+  // a green/yellow is definitely absent — placing a pigment that's in the mix
+  // always returns green or yellow, so a lone grey means "not in the recipe".
   const pigHint: Record<string, Clue> = {};
+  const triedGrey: Record<string, boolean> = {};
   puzzle.palette.forEach((id) => {
     pigHint[id] = "none";
   });
   board.forEach((b) => {
-    puzzle.palette.forEach((id) => {
-      const c = b.fb.clues[id];
-      if (c === "grey") pigHint[id] = "grey";
-      else if (c === "green" && pigHint[id] !== "grey") pigHint[id] = "green";
-      else if (c === "yellow" && pigHint[id] === "none") pigHint[id] = "yellow";
+    b.recipe.forEach((id, i) => {
+      const c = b.fb.clues[i];
+      if (c === "green") pigHint[id] = "green";
+      else if (c === "yellow" && pigHint[id] !== "green") pigHint[id] = "yellow";
+      else if (c === "grey") triedGrey[id] = true;
     });
   });
 
@@ -53,15 +60,14 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
       return {
         filled: false,
         swatchCss: "transparent",
-        cells: Array.from({ length: DOSES }, () => ({ css: "transparent", icon: "", iconColor: "transparent" })),
+        cells: weights.map((w) => ({ css: "transparent", clue: "none" as Clue, iconColor: "transparent", weight: w })),
         pctText: "",
       };
     }
-    const sorted = b.recipe.slice().sort((x, y) => puzzle.palette.indexOf(x) - puzzle.palette.indexOf(y));
-    const cells = sorted.map((id) => {
+    const cells = b.recipe.map((id, idx) => {
       const rgb = pureMix(id);
-      const icon = clueIcon(b.fb.clues[id]);
-      return { css: rgbToCss(rgb), icon, iconColor: icon ? fgFor(rgb) : "transparent" };
+      const clue = b.fb.clues[idx];
+      return { css: rgbToCss(rgb), clue, iconColor: hasClueIcon(clue) ? fgFor(rgb) : "transparent", weight: weights[idx] };
     });
     return { filled: true, swatchCss: rgbToCss(b.fb.rgb), cells, pctText: b.fb.matchPercent + "%" };
   });
@@ -106,15 +112,18 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
 
       <div>
         <div className="flex justify-end mb-3">
-          <span className="font-mono text-[10px] text-sub">press a key · ⌫ delete · ⏎ guess</span>
+          <span className="font-mono text-[10px] text-sub inline-flex items-center gap-1.5">
+            press a key
+            <span className="inline-flex items-center gap-1">· <Delete size={12} strokeWidth={2} /> delete</span>
+            <span className="inline-flex items-center gap-1">· <CornerDownLeft size={12} strokeWidth={2} /> guess</span>
+          </span>
         </div>
         <div className="flex gap-[9px] flex-wrap justify-center mb-9">
           {puzzle.palette.map((id, i) => {
             const p = getPigment(id);
             const rgb = pureMix(id);
             const hint = pigHint[id];
-            const icon = clueIcon(hint);
-            const excluded = hint === "grey";
+            const excluded = !hasClueIcon(hint) && !!triedGrey[id];
             const disabled = compFull || finished;
             return (
               <PaletteChip
@@ -123,8 +132,8 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
                 code={p.code}
                 css={rgbToCss(rgb)}
                 keyLabel={keyLabels[i] || ""}
-                icon={icon}
-                iconColor={icon ? fgFor(rgb) : "transparent"}
+                clue={hint}
+                iconColor={hasClueIcon(hint) ? fgFor(rgb) : "transparent"}
                 excluded={excluded}
                 disabled={disabled}
                 onClick={() => addDose(id)}
@@ -133,23 +142,25 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
           })}
         </div>
         <div className="flex gap-3 items-center flex-wrap">
-          <div className="flex gap-[7px]">
-            {Array.from({ length: DOSES }, (_, i) => {
+          <div className="flex gap-[7px] flex-1 max-w-[360px]">
+            {weights.map((w, i) => {
               const id = composition[i];
-              if (!id) {
-                return <div key={i} className="w-10 h-10 border border-dashed border-sub rounded-card" />;
-              }
-              const rgb = pureMix(id);
               return (
-                <button
-                  key={i}
-                  onClick={() => removeDose(i)}
-                  disabled={finished}
-                  className="w-10 h-10 border border-line rounded-card p-0 font-mono text-[9px] font-bold cursor-pointer disabled:cursor-default"
-                  style={{ background: rgbToCss(rgb), color: fgFor(rgb) }}
-                >
-                  {getPigment(id).code.split("-")[0]}
-                </button>
+                <div key={i} className="flex flex-col" style={{ flexGrow: w, flexBasis: 0 }}>
+                  {id ? (
+                    <button
+                      onClick={() => removeDose(i)}
+                      disabled={finished}
+                      className="h-10 w-full border border-line rounded-card p-0 font-mono text-[9px] font-bold cursor-pointer disabled:cursor-default overflow-hidden"
+                      style={{ background: rgbToCss(pureMix(id)), color: fgFor(pureMix(id)) }}
+                    >
+                      {getPigment(id).code.split("-")[0]}
+                    </button>
+                  ) : (
+                    <div className="h-10 w-full border border-dashed border-sub rounded-card" />
+                  )}
+                  <span className="font-mono text-[9px] text-sub text-center mt-1">×{w}</span>
+                </div>
               );
             })}
           </div>
@@ -159,7 +170,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
             style={{ opacity: canGuess ? 1 : 0.4 }}
             className="ml-auto text-[12px] tracking-[0.08em] px-5 py-2.5"
           >
-            Guess · {composition.length}/{DOSES}
+            Guess · {composition.length}/{CELLS}
           </PrimaryButton>
         </div>
       </div>

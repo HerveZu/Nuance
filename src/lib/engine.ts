@@ -22,7 +22,7 @@ export type Clue = "green" | "yellow" | "grey" | "none";
 
 export interface Feedback {
   matchPercent: number;
-  clues: Record<string, Clue>;
+  clues: Clue[];
   deltaE: number;
   win: boolean;
   rgb: RGB;
@@ -37,6 +37,7 @@ export interface Puzzle {
   palette: string[];
   target: RGB;
   canonical: string[];
+  weights: number[];
   theme: Theme;
   num: number | string;
 }
@@ -57,7 +58,10 @@ export interface Stats {
 
 export const WIN_PCT = 96;
 export const GUESSES = 6;
-export const DOSES = 6;
+// The recipe is an ordered row of cells. Order matters because each cell
+// carries its own weight in the mix — a per-day value of 1..6. A heavy cell
+// dominates the blend; a light one barely tints it.
+export const CELLS = 4;
 
 const MIN_PALETTE_DIST = 0.03;
 
@@ -125,10 +129,6 @@ export function getPigment(id: string): Pigment {
   return PMAP[id];
 }
 
-export function clueIcon(clue: Clue): string {
-  return clue === "green" ? "✓" : clue === "yellow" ? "↕" : "";
-}
-
 function clamp(x: number, a: number, b: number): number {
   return Math.max(a, Math.min(b, x));
 }
@@ -149,20 +149,26 @@ function rybToRgb(r: number, y: number, b: number): RGB {
   return { r: o[0], g: o[1], b: o[2] };
 }
 
-export function mix(recipe: string[]): RGB {
-  let r = 0, y = 0, b = 0;
-  recipe.forEach((id) => {
+export function mix(recipe: string[], weights: number[]): RGB {
+  let r = 0, y = 0, b = 0, wsum = 0;
+  recipe.forEach((id, i) => {
+    const w = weights[i] ?? 0;
     const c = PMAP[id].ryb;
-    r += c[0];
-    y += c[1];
-    b += c[2];
+    r += c[0] * w;
+    y += c[1] * w;
+    b += c[2] * w;
+    wsum += w;
   });
-  const n = recipe.length || 1;
+  const n = wsum || 1;
   return rybToRgb(r / n, y / n, b / n);
 }
 
+const UNIT_WEIGHTS = Array(CELLS).fill(1);
+
+// A single pigment blended with itself is that pigment regardless of weights,
+// so the pure swatch is weight-agnostic.
 export function pureMix(id: string): RGB {
-  return mix(Array(DOSES).fill(id));
+  return mix(Array(CELLS).fill(id), UNIT_WEIGHTS);
 }
 
 function lin(c: number): number {
@@ -325,21 +331,29 @@ function pickDailyPalette(rng: () => number): { palette: string[]; theme: Theme 
   return { palette: picked, theme: { title: arch.title, sub: arch.sub } };
 }
 
-function genRecipe(rng: () => number, palette: string[]): { recipe: string[]; target: RGB } {
+// Each cell's weight in the mix is an independent die roll: 1..6.
+function genWeights(rng: () => number): number[] {
+  return Array.from({ length: CELLS }, () => 1 + Math.floor(rng() * 6));
+}
+
+function genRecipe(rng: () => number, palette: string[], weights: number[]): { recipe: string[]; target: RGB } {
   for (let n = 0; n < 500; n++) {
     const distinct = Math.min(rng() < 0.45 ? 2 : 3, palette.length);
     const chosen = shuffle(palette, rng).slice(0, distinct);
     const doses = chosen.slice();
-    while (doses.length < DOSES) doses.push(chosen[Math.floor(rng() * chosen.length)]);
-    const target = mix(doses);
+    while (doses.length < CELLS) doses.push(chosen[Math.floor(rng() * chosen.length)]);
+    // Shuffle so the heaviest cell isn't always the first-picked pigment.
+    const recipe = shuffle(doses, rng);
+    const target = mix(recipe, weights);
     const lch = oklch(target);
     if (lch.L > 0.92 && lch.C < 0.04) continue;
     if (lch.L < 0.12) continue;
-    return { recipe: doses, target };
+    return { recipe, target };
   }
   const d = shuffle(palette, rng).slice(0, 2);
-  while (d.length < DOSES) d.push(d[0]);
-  return { recipe: d, target: mix(d) };
+  while (d.length < CELLS) d.push(d[0]);
+  const recipe = shuffle(d, rng);
+  return { recipe, target: mix(recipe, weights) };
 }
 
 function hashDate(d: Date): number {
@@ -366,53 +380,50 @@ export function dateForOffset(offset: number): Date {
 export function dailyPuzzle(date: Date): Puzzle {
   const rng = mulberry32(hashDate(date));
   const { palette, theme } = pickDailyPalette(rng);
-  const r = genRecipe(rng, palette);
+  const weights = genWeights(rng);
+  const r = genRecipe(rng, palette, weights);
   return {
     palette,
     target: r.target,
     canonical: r.recipe,
+    weights,
     theme,
     num: dayNumber(date),
   };
 }
 
-function countMap(rec: string[]): Record<string, number> {
-  const m: Record<string, number> = {};
-  rec.forEach((p) => { m[p] = (m[p] || 0) + 1; });
-  return m;
-}
-
 export function evaluate(guess: string[], puzzle: Puzzle): Feedback {
-  const gc = countMap(guess), tc = countMap(puzzle.canonical);
-  const clues: Record<string, Clue> = {};
-  puzzle.palette.forEach((id) => {
-    const g = gc[id] || 0, t = tc[id] || 0;
-    if (g === 0) clues[id] = "none";
-    else if (g === t) clues[id] = "green";
-    else if (t > 0) clues[id] = "yellow";
-    else clues[id] = "grey";
+  // Per-cell clues: green = right pigment in the right cell; yellow = right
+  // pigment but in the wrong cell; grey = pigment not in the recipe. Resolved
+  // Mastermind-style so each recipe cell can satisfy only one guess cell.
+  const code = puzzle.canonical;
+  const clues: Clue[] = guess.map(() => "grey");
+  const used = code.map(() => false);
+  guess.forEach((g, i) => {
+    if (code[i] === g) { clues[i] = "green"; used[i] = true; }
   });
-  const rgb = mix(guess);
+  guess.forEach((g, i) => {
+    if (clues[i] === "green") return;
+    const j = code.findIndex((c, k) => !used[k] && c === g);
+    if (j >= 0) { clues[i] = "yellow"; used[j] = true; }
+  });
+  const rgb = mix(guess, puzzle.weights);
   const dE = deltaE(rgb, puzzle.target);
   const mp = matchPercent(dE);
   return { matchPercent: mp, clues, deltaE: dE, win: mp >= WIN_PCT, rgb };
 }
 
-export function recipeText(canonical: string[]): string {
-  const cc = countMap(canonical);
-  return Object.keys(cc)
-    .sort((a, b) => cc[b] - cc[a])
-    .map((id) => cc[id] + "× " + PMAP[id].name)
+export function recipeText(canonical: string[], weights: number[]): string {
+  return canonical
+    .map((id, i) => weights[i] + "× " + PMAP[id].name)
     .join("  ·  ");
 }
 
 export function buildShareText(board: BoardEntry[], puzzle: Puzzle, won: boolean): string {
   const rows = board.map((b) => {
-    const sorted = b.recipe.slice().sort((x, y) => puzzle.palette.indexOf(x) - puzzle.palette.indexOf(y));
-    const squares = sorted.map((id) => {
-      const c = b.fb.clues[id];
-      return c === "green" ? "🟩" : c === "yellow" ? "🟨" : "⬜";
-    }).join("");
+    const squares = b.fb.clues.map((c) => (
+      c === "green" ? "🟩" : c === "yellow" ? "🟨" : "⬜"
+    )).join("");
     return squares + "  " + b.fb.matchPercent + "%";
   });
   return "Nuance #" + puzzle.num + "  " + (won ? board.length : "X") + "/" + GUESSES + "\n" + rows.join("\n");

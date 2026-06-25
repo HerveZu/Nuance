@@ -1,3 +1,4 @@
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GhostButton } from "./ui/buttons";
 
 interface HeaderProps {
@@ -27,7 +28,7 @@ export function Header({ num, dateLabel, isToday, canGoBack, finished, onPrev, o
           title="Previous day"
           className="text-[13px] w-[38px] h-[38px] flex items-center justify-center disabled:opacity-[0.35]"
         >
-          ‹
+          <ChevronLeft size={18} aria-label="Previous day" />
         </GhostButton>
         <GhostButton
           onClick={onNext}
@@ -35,7 +36,7 @@ export function Header({ num, dateLabel, isToday, canGoBack, finished, onPrev, o
           title="Next day"
           className="text-[13px] w-[38px] h-[38px] flex items-center justify-center disabled:opacity-[0.35]"
         >
-          ›
+          <ChevronRight size={18} aria-label="Next day" />
         </GhostButton>
         {finished && (
           <GhostButton onClick={onReopen} className="text-[11px] tracking-[0.08em] uppercase px-3.5 py-[9px]">

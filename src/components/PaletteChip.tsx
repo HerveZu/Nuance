@@ -1,16 +1,19 @@
+import type { Clue } from "@/lib/engine";
+import { ClueIcon } from "./ui/ClueIcon";
+
 interface PaletteChipProps {
   name: string;
   code: string;
   css: string;
   keyLabel: string;
-  icon: string;
+  clue: Clue;
   iconColor: string;
   excluded: boolean;
   disabled: boolean;
   onClick: () => void;
 }
 
-export function PaletteChip({ name, code, css, keyLabel, icon, iconColor, excluded, disabled, onClick }: PaletteChipProps) {
+export function PaletteChip({ name, code, css, keyLabel, clue, iconColor, excluded, disabled, onClick }: PaletteChipProps) {
   return (
     <button
       onClick={onClick}
@@ -22,8 +25,8 @@ export function PaletteChip({ name, code, css, keyLabel, icon, iconColor, exclud
         <span className="absolute top-[3px] left-[3px] min-w-[15px] h-[15px] px-[3px] rounded-[3px] bg-black/55 text-white flex items-center justify-center font-mono text-[9px] font-bold uppercase">
           {keyLabel}
         </span>
-        <span className="absolute top-0.5 right-1 font-ui text-[18px] font-extrabold leading-none" style={{ color: iconColor }}>
-          {icon}
+        <span className="absolute top-0.5 right-1 leading-none">
+          <ClueIcon clue={clue} color={iconColor} size={18} />
         </span>
       </div>
       <div className="px-1.5 pt-[3px] pb-1">

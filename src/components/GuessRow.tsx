@@ -1,7 +1,11 @@
+import type { Clue } from "@/lib/engine";
+import { ClueIcon } from "./ui/ClueIcon";
+
 export interface RowCell {
   css: string;
-  icon: string;
+  clue: Clue;
   iconColor: string;
+  weight: number;
 }
 
 interface GuessRowProps {
@@ -18,12 +22,10 @@ export function GuessRow({ filled, swatchCss, cells, pctText }: GuessRowProps) {
       {cells.map((cell, i) => (
         <div
           key={i}
-          className={`flex-1 h-[42px] rounded-card overflow-hidden flex items-center justify-center ${cellBorder}`}
-          style={{ background: cell.css }}
+          className={`h-[42px] rounded-card overflow-hidden flex items-center justify-center ${cellBorder}`}
+          style={{ background: cell.css, flexGrow: cell.weight, flexBasis: 0 }}
         >
-          <span className="font-ui text-[26px] font-extrabold leading-none" style={{ color: cell.iconColor }}>
-            {cell.icon}
-          </span>
+          <ClueIcon clue={cell.clue} color={cell.iconColor} size={26} />
         </div>
       ))}
       <div className="w-[42px] ml-3 text-right font-display font-bold text-[15px] tabular-nums shrink-0">{pctText}</div>

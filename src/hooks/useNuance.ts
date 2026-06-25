@@ -7,7 +7,7 @@ import {
   dateKey,
   dayNumber,
   evaluate,
-  DOSES,
+  CELLS,
   GUESSES,
   type BoardEntry,
   type Puzzle,
@@ -53,7 +53,13 @@ function boardFrom(recipes: string[][], puzzle: Puzzle): BoardEntry[] {
 
 function loadTodayBoard(puzzle: Puzzle): { board: BoardEntry[]; status: Status } {
   const daily = loadDaily();
-  if (daily && daily.date === dateKey(dateForOffset(0)) && daily.size === puzzle.palette.length && Array.isArray(daily.board)) {
+  if (
+    daily &&
+    daily.date === dateKey(dateForOffset(0)) &&
+    daily.size === puzzle.palette.length &&
+    Array.isArray(daily.board) &&
+    daily.board.every((r) => Array.isArray(r) && r.length === CELLS)
+  ) {
     return { board: boardFrom(daily.board, puzzle), status: (daily.status as Status) || "composing" };
   }
   return { board: [], status: "composing" };
@@ -119,7 +125,7 @@ export function useNuance(): Nuance {
 
   const addDose = useCallback((id: string) => {
     const { status: st, composition: comp } = latest.current;
-    if (st !== "composing" || comp.length >= DOSES) return;
+    if (st !== "composing" || comp.length >= CELLS) return;
     setComposition((c) => [...c, id]);
   }, []);
 
@@ -130,7 +136,7 @@ export function useNuance(): Nuance {
 
   const submit = useCallback(() => {
     const { status: st, composition: comp, board: bd, puzzle: pz, free: fr, stats: prev } = latest.current;
-    if (st !== "composing" || comp.length !== DOSES) return;
+    if (st !== "composing" || comp.length !== CELLS) return;
     const fb = evaluate(comp, pz);
     const nextBoard = [...bd, { recipe: comp.slice(), fb }];
     let next: Status = "composing";

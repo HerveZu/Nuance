@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import { getPigment, pureMix, rgbToCss, type Puzzle } from "@/lib/engine";
 import { PrimaryButton } from "./ui/buttons";
 
@@ -25,8 +26,8 @@ export function LaunchScreen({ puzzle, onPlay }: { puzzle: Puzzle; onPlay: () =>
           );
         })}
       </div>
-      <PrimaryButton onClick={onPlay} className="mx-auto text-[13px] tracking-[0.1em] px-[30px] py-3.5">
-        Start mixing →
+      <PrimaryButton onClick={onPlay} className="mx-auto inline-flex items-center gap-2 text-[13px] tracking-[0.1em] px-[30px] py-3.5">
+        Start mixing <ArrowRight size={16} />
       </PrimaryButton>
     </div>
   );

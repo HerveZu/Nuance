@@ -15,8 +15,6 @@ export function GuessRow({ filled, swatchCss, cells, pctText }: GuessRowProps) {
   const cellBorder = filled ? "border border-line" : "border border-dashed border-sub";
   return (
     <div className="flex gap-1.5 items-center mb-[7px]" style={{ opacity: filled ? 1 : 0.45 }}>
-      <div className="w-10 h-[42px] border border-line rounded-card shrink-0" style={{ background: swatchCss }} />
-      <div className="w-[42px] text-left font-display font-bold text-[15px] tabular-nums shrink-0">{pctText}</div>
       {cells.map((cell, i) => (
         <div
           key={i}
@@ -28,6 +26,8 @@ export function GuessRow({ filled, swatchCss, cells, pctText }: GuessRowProps) {
           </span>
         </div>
       ))}
+      <div className="w-10 h-[42px] border border-line rounded-card shrink-0" style={{ background: swatchCss }} />
+      <div className="w-[42px] text-right font-display font-bold text-[15px] tabular-nums shrink-0">{pctText}</div>
     </div>
   );
 }

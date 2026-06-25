@@ -16,7 +16,7 @@ function LegendItem({ color, icon, children }: { color: string; icon: React.Reac
 
 export function ClueLegend({ className = "flex flex-col gap-2.5" }: { className?: string }) {
   return (
-    <div className={`font-mono text-[10.5px] text-ink ${className}`}>
+    <div className={`font-mono text-xs text-ink ${className}`}>
       <LegendItem color="var(--color-clue-green)" icon={<Check size={11} strokeWidth={3} />}>
         Right pigment &amp; cell
       </LegendItem>

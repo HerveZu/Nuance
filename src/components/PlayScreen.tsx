@@ -84,7 +84,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
       <div>
         <div className="flex items-baseline justify-between">
           <SectionLabel>BEST MATCH</SectionLabel>
-          <div className="font-display font-bold text-[34px] leading-[0.9]">
+          <div className="font-display font-bold text-4xl leading-[0.9]">
             {board.length ? best + "%" : "—"}
           </div>
         </div>
@@ -112,7 +112,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
 
       <div>
         <div className="flex justify-end mb-3">
-          <span className="font-mono text-[10px] text-sub inline-flex items-center gap-1.5">
+          <span className="font-mono text-xs text-sub inline-flex items-center gap-1.5">
             press a key
             <span className="inline-flex items-center gap-1">· <Delete size={12} strokeWidth={2} /> delete</span>
             <span className="inline-flex items-center gap-1">· <CornerDownLeft size={12} strokeWidth={2} /> guess</span>
@@ -151,7 +151,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
                     <button
                       onClick={() => removeDose(i)}
                       disabled={finished}
-                      className="h-10 w-full border border-line rounded-card p-0 font-mono text-[9px] font-bold cursor-pointer disabled:cursor-default overflow-hidden"
+                      className="h-10 w-full border border-line rounded-card p-0 font-mono text-2xs font-bold cursor-pointer disabled:cursor-default overflow-hidden"
                       style={{ background: rgbToCss(pureMix(id)), color: fgFor(pureMix(id)) }}
                     >
                       {getPigment(id).code.split("-")[0]}
@@ -159,7 +159,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
                   ) : (
                     <div className="h-10 w-full border border-dashed border-sub rounded-card" />
                   )}
-                  <span className="font-mono text-[9px] text-sub text-center mt-1">×{w}</span>
+                  <span className="font-mono text-2xs text-sub text-center mt-1">×{w}</span>
                 </div>
               );
             })}
@@ -168,7 +168,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
             onClick={submit}
             disabled={!canGuess}
             style={{ opacity: canGuess ? 1 : 0.4 }}
-            className="ml-auto text-[12px] tracking-[0.08em] px-5 py-2.5"
+            className="ml-auto text-base tracking-[0.08em] px-5 py-2.5"
           >
             Guess · {composition.length}/{CELLS}
           </PrimaryButton>

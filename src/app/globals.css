@@ -12,6 +12,18 @@
   --radius-card: 10px;
   --shadow-overlay: 0 16px 44px rgba(0, 0, 0, 0.55);
 
+  --text-2xs: 9px;
+  --text-xs: 10px;
+  --text-sm: 11px;
+  --text-base: 12px;
+  --text-md: 13px;
+  --text-lg: 15px;
+  --text-xl: 24px;
+  --text-2xl: 28px;
+  --text-3xl: 32px;
+  --text-4xl: 34px;
+  --text-5xl: 46px;
+
   --font-display: var(--font-bricolage), "Bricolage Grotesque", sans-serif;
   --font-ui: var(--font-grotesk), "Space Grotesk", sans-serif;
   --font-mono: var(--font-mono), "Space Mono", monospace;

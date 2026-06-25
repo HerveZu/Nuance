@@ -28,7 +28,7 @@ export function GuessRow({ filled, swatchCss, cells, pctText }: GuessRowProps) {
           <ClueIcon clue={cell.clue} color={cell.iconColor} size={26} />
         </div>
       ))}
-      <div className="w-[42px] ml-3 text-right font-display font-bold text-[15px] tabular-nums shrink-0">{pctText}</div>
+      <div className="w-[42px] ml-3 text-right font-display font-bold text-lg tabular-nums shrink-0">{pctText}</div>
       <div className="w-10 h-[42px] border border-line rounded-card shrink-0" style={{ background: swatchCss }} />
     </div>
   );

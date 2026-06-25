@@ -56,7 +56,6 @@ export interface Stats {
   lastWinDay: number | null;
 }
 
-export const WIN_PCT = 96;
 export const GUESSES = 6;
 // The recipe is an ordered row of cells. Order matters because each cell
 // carries its own weight in the mix — a per-day value of 1..6. A heavy cell
@@ -331,9 +330,10 @@ function pickDailyPalette(rng: () => number): { palette: string[]; theme: Theme 
   return { palette: picked, theme: { title: arch.title, sub: arch.sub } };
 }
 
-// Each cell's weight in the mix is an independent die roll: 1..6.
+// Each cell gets a distinct weight, drawn from 1..6 (no duplicates), so the
+// four cells always pull on the mix by different amounts.
 function genWeights(rng: () => number): number[] {
-  return Array.from({ length: CELLS }, () => 1 + Math.floor(rng() * 6));
+  return shuffle([1, 2, 3, 4, 5, 6], rng).slice(0, CELLS);
 }
 
 function genRecipe(rng: () => number, palette: string[], weights: number[]): { recipe: string[]; target: RGB } {
@@ -410,7 +410,10 @@ export function evaluate(guess: string[], puzzle: Puzzle): Feedback {
   const rgb = mix(guess, puzzle.weights);
   const dE = deltaE(rgb, puzzle.target);
   const mp = matchPercent(dE);
-  return { matchPercent: mp, clues, deltaE: dE, win: mp >= WIN_PCT, rgb };
+  // Solved only when every cell matches the recipe exactly (all green), not
+  // merely when the blended colour lands close to the target.
+  const win = clues.length === CELLS && clues.every((c) => c === "green");
+  return { matchPercent: mp, clues, deltaE: dE, win, rgb };
 }
 
 export function recipeText(canonical: string[], weights: number[]): string {

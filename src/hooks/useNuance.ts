@@ -2,10 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  dailyPuzzle,
-  dateForOffset,
-  dateKey,
-  dayNumber,
   evaluate,
   CELLS,
   GUESSES,
@@ -13,6 +9,7 @@ import {
   type Puzzle,
   type Stats,
 } from "@/lib/engine";
+import { dailyPuzzle, dateForOffset, dateKey, dayNumber } from "@/lib/daily";
 import { loadDaily, loadStats, saveDaily, saveStats, defaultStats } from "@/lib/storage";
 import { KEY_CODES } from "@/lib/keyboard";
 

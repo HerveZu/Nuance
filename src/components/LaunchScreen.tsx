@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
-import { getPigment, pureMix, rgbToCss, type Puzzle } from "@/lib/engine";
+import { getPigment, pureMix, type Puzzle } from "@/lib/engine";
+import { rgbToCss } from "@/lib/color";
 import { PrimaryButton } from "./ui/buttons";
 
 export function LaunchScreen({ puzzle, onPlay }: { puzzle: Puzzle; onPlay: () => void }) {

@@ -1,15 +1,14 @@
 import { Delete, CornerDownLeft } from "lucide-react";
 import {
-  fgFor,
   getPigment,
   pureMix,
-  rgbToCss,
   CELLS,
   GUESSES,
   type BoardEntry,
   type Clue,
   type Puzzle,
 } from "@/lib/engine";
+import { fgFor, rgbToCss } from "@/lib/color";
 import { useKeyLabels } from "@/lib/keyboard";
 import { ClueLegend } from "./ClueLegend";
 import { SectionLabel } from "./ui/SectionLabel";

@@ -3,12 +3,12 @@ import {
   getPigment,
   pureMix,
   recipeText,
-  rgbToCss,
   GUESSES,
   type BoardEntry,
   type Puzzle,
   type Stats,
 } from "@/lib/engine";
+import { rgbToCss } from "@/lib/color";
 import { X, Check } from "lucide-react";
 import { SectionLabel } from "./ui/SectionLabel";
 import { PrimaryButton } from "./ui/buttons";

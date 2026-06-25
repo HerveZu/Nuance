@@ -1,26 +1,49 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --color-ground: #141217;
+  --color-surface: #201d27;
+  --color-ink: #f3eee4;
+  --color-sub: #8c889a;
+  --color-line: #322e3c;
+  --color-clue-green: #6aaa64;
+  --color-clue-yellow: #c9b458;
+
+  --radius-card: 10px;
+  --shadow-overlay: 0 16px 44px rgba(0, 0, 0, 0.55);
+
+  --font-display: var(--font-bricolage), "Bricolage Grotesque", sans-serif;
+  --font-ui: var(--font-grotesk), "Space Grotesk", sans-serif;
+  --font-mono: var(--font-mono), "Space Mono", monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  * {
+    box-sizing: border-box;
+    margin: 0;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+    background: var(--color-ground);
+    color: var(--color-ink);
+    font-family: var(--font-ui);
+  }
+
+  button {
+    font: inherit;
+    color: inherit;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

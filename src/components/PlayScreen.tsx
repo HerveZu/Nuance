@@ -95,7 +95,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
 
   return (
     <div>
-      <div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_300px] mb-12">
+      <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_300px] mb-12">
         <div>
           {rows.map((row, i) => (
             <GuessRow key={i} {...row} />

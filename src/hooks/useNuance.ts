@@ -16,7 +16,6 @@ import {
 import { loadDaily, loadStats, saveDaily, saveStats, defaultStats } from "@/lib/storage";
 import { KEY_CODES } from "@/lib/keyboard";
 
-const PALETTE_SIZE = 20;
 type Status = "composing" | "won" | "lost";
 
 export interface Nuance {
@@ -54,7 +53,7 @@ function boardFrom(recipes: string[][], puzzle: Puzzle): BoardEntry[] {
 
 function loadTodayBoard(puzzle: Puzzle): { board: BoardEntry[]; status: Status } {
   const daily = loadDaily();
-  if (daily && daily.date === dateKey(dateForOffset(0)) && daily.size === PALETTE_SIZE && Array.isArray(daily.board)) {
+  if (daily && daily.date === dateKey(dateForOffset(0)) && daily.size === puzzle.palette.length && Array.isArray(daily.board)) {
     return { board: boardFrom(daily.board, puzzle), status: (daily.status as Status) || "composing" };
   }
   return { board: [], status: "composing" };
@@ -64,7 +63,7 @@ export function useNuance(): Nuance {
   const [ready, setReady] = useState(false);
   const [screen, setScreen] = useState<"launch" | "play">("launch");
   const [dayOffset, setDayOffset] = useState(0);
-  const [puzzle, setPuzzle] = useState<Puzzle>(() => dailyPuzzle(dateForOffset(0), PALETTE_SIZE));
+  const [puzzle, setPuzzle] = useState<Puzzle>(() => dailyPuzzle(dateForOffset(0)));
   const [composition, setComposition] = useState<string[]>([]);
   const [board, setBoard] = useState<BoardEntry[]>([]);
   const [status, setStatus] = useState<Status>("composing");
@@ -83,7 +82,7 @@ export function useNuance(): Nuance {
     // localStorage is unavailable during SSR, so the saved board/stats are
     // hydrated once after mount — a deliberate sync pass, not a render cascade.
     /* eslint-disable react-hooks/set-state-in-effect */
-    const pz = dailyPuzzle(dateForOffset(0), PALETTE_SIZE);
+    const pz = dailyPuzzle(dateForOffset(0));
     const { board: savedBoard, status: savedStatus } = loadTodayBoard(pz);
     setPuzzle(pz);
     setBoard(savedBoard);
@@ -104,7 +103,7 @@ export function useNuance(): Nuance {
     if (newOffset < 0) return;
     const d = dateForOffset(newOffset);
     if (dayNumber(d) < 1) return;
-    const pz = dailyPuzzle(d, PALETTE_SIZE);
+    const pz = dailyPuzzle(d);
     const atToday = newOffset === 0;
     const { board: nextBoard, status: nextStatus } = atToday ? loadTodayBoard(pz) : { board: [], status: "composing" as Status };
     setDayOffset(newOffset);
@@ -141,7 +140,7 @@ export function useNuance(): Nuance {
     setComposition([]);
     setStatus(next);
     setOverlayOpen(next !== "composing");
-    if (!fr) saveDaily(dateKey(dateForOffset(0)), PALETTE_SIZE, nextBoard.map((b) => b.recipe), next);
+    if (!fr) saveDaily(dateKey(dateForOffset(0)), pz.palette.length, nextBoard.map((b) => b.recipe), next);
     if (next !== "composing" && !fr) {
       const s: Stats = { ...prev, distribution: (prev.distribution || [0, 0, 0, 0, 0, 0]).slice() };
       s.played = (s.played || 0) + 1;

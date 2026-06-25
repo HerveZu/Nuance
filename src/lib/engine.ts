@@ -59,7 +59,7 @@ export const WIN_PCT = 96;
 export const GUESSES = 6;
 export const DOSES = 6;
 
-const MIN_PALETTE_DIST = 0.04;
+const MIN_PALETTE_DIST = 0.03;
 
 const EPOCH = Date.UTC(2026, 1, 8);
 
@@ -247,28 +247,82 @@ POOL.forEach((p) => {
   PURE[p.id] = pureMix(p.id);
 });
 
-// Greedily collect visually distinct pigments first, then fill any shortfall
-// with whatever remains — so near-identical colours are only used when the
-// requested size can't be met without them.
-function genPalette(rng: () => number, size: number): string[] {
-  const ids = POOL.map((p) => p.id);
-  for (let attempt = 0; attempt < 200; attempt++) {
-    const order = shuffle(ids, rng);
-    const picked: string[] = [];
-    for (const id of order) {
-      if (picked.length >= size) break;
-      if (picked.every((p) => deltaE(PURE[p], PURE[id]) >= MIN_PALETTE_DIST)) picked.push(id);
-    }
-    for (const id of order) {
-      if (picked.length >= size) break;
-      if (!picked.includes(id)) picked.push(id);
-    }
-    const chrom = picked.filter((id) => id !== "W" && id !== "K");
-    const wk = picked.filter((id) => id === "W" || id === "K");
-    const fams = new Set(chrom.map((id) => PMAP[id].fam));
-    if (chrom.length >= 3 && fams.size >= 2 && wk.length <= (size > 6 ? 2 : 1)) return picked;
+const FAMILIES = ["red", "magenta", "violet", "orange", "yellow", "earth", "green", "blue"];
+const BY_FAM: Record<string, string[]> = {};
+POOL.forEach((p) => {
+  if (p.fam === "white" || p.fam === "black") return;
+  (BY_FAM[p.fam] ||= []).push(p.id);
+});
+
+interface Archetype {
+  title: string;
+  sub: string;
+  weights: Record<string, number>;
+  neutralsMax: number;
+  size: [number, number];
+}
+
+// Each day draws one archetype, which biases family selection (and palette
+// size) so the daily palette has a distinct character instead of every day
+// sampling the same broad spread of the pool.
+const ARCHETYPES: Archetype[] = [
+  { title: "WARM SPECTRUM", sub: "Reds and yellows run hot.", weights: { red: 4, orange: 3, yellow: 3, magenta: 2, earth: 2 }, neutralsMax: 1, size: [13, 17] },
+  { title: "COOL FRONT", sub: "Blues and greens lead the wheel.", weights: { blue: 4, green: 3, violet: 3, magenta: 1 }, neutralsMax: 2, size: [12, 15] },
+  { title: "THE EARTHS", sub: "Grounded, muted territory.", weights: { earth: 5, orange: 2, yellow: 2, red: 2, green: 1 }, neutralsMax: 1, size: [12, 16] },
+  { title: "SUNSET", sub: "Warm analogous — reds melting into gold.", weights: { red: 4, orange: 4, yellow: 3, magenta: 3 }, neutralsMax: 1, size: [11, 13] },
+  { title: "FOREST & SKY", sub: "Greens and blues, leaf to horizon.", weights: { green: 4, blue: 3, yellow: 2, earth: 3 }, neutralsMax: 1, size: [13, 16] },
+  { title: "JEWEL BOX", sub: "Deep, saturated violets, blues and greens.", weights: { violet: 3, blue: 3, magenta: 3, green: 2, red: 2 }, neutralsMax: 1, size: [12, 15] },
+  { title: "BRUISED VIOLETS", sub: "Violets and magentas, low and moody.", weights: { violet: 4, magenta: 3, blue: 2, red: 2 }, neutralsMax: 1, size: [11, 14] },
+  { title: "PURE PIGMENT", sub: "No white, no black — shift hue to lighten or shade.", weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 1, earth: 1 }, neutralsMax: 0, size: [12, 15] },
+  { title: "FULL WHEEL", sub: "A broad spread across the spectrum.", weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 2, earth: 2 }, neutralsMax: 2, size: [16, 20] },
+];
+
+function weightedPick(fams: string[], weights: Record<string, number>, rng: () => number): string {
+  let total = 0;
+  for (const f of fams) total += weights[f] || 0;
+  let r = rng() * total;
+  for (const f of fams) {
+    r -= weights[f] || 0;
+    if (r <= 0) return f;
   }
-  return shuffle(ids, rng).slice(0, size);
+  return fams[fams.length - 1];
+}
+
+function pickDailyPalette(rng: () => number): { palette: string[]; theme: Theme } {
+  const arch = ARCHETYPES[Math.floor(rng() * ARCHETYPES.length)];
+  const size = arch.size[0] + Math.floor(rng() * (arch.size[1] - arch.size[0] + 1));
+
+  const picked: string[] = [];
+  const used = new Set<string>();
+  const tryAdd = (id: string): boolean => {
+    if (used.has(id)) return false;
+    if (!picked.every((p) => deltaE(PURE[p], PURE[id]) >= MIN_PALETTE_DIST)) return false;
+    picked.push(id);
+    used.add(id);
+    return true;
+  };
+
+  // White/black count varies day to day, capped by the archetype.
+  const neutrals = shuffle(["W", "K"], rng);
+  const neutralCount = Math.floor(rng() * (arch.neutralsMax + 1));
+  for (let i = 0; i < neutralCount; i++) tryAdd(neutrals[i]);
+
+  // Chromatic pigments drawn family-by-family, weighted toward the archetype.
+  const pool: Record<string, string[]> = {};
+  let active = FAMILIES.filter((f) => arch.weights[f] && BY_FAM[f]);
+  active.forEach((f) => { pool[f] = shuffle(BY_FAM[f], rng); });
+  // Only ever draw from the archetype's families — if they run dry before
+  // reaching the target size the palette simply ends up smaller, keeping each
+  // day's mood pure rather than diluting it with off-theme colours.
+  let guard = 0;
+  while (picked.length < size && active.length && guard++ < 3000) {
+    const fam = weightedPick(active, arch.weights, rng);
+    const fp = pool[fam];
+    while (fp.length && !tryAdd(fp.shift()!)) { /* skip near-identical pigments */ }
+    if (!fp.length) active = active.filter((f) => f !== fam);
+  }
+
+  return { palette: picked, theme: { title: arch.title, sub: arch.sub } };
 }
 
 function genRecipe(rng: () => number, palette: string[]): { recipe: string[]; target: RGB } {
@@ -286,18 +340,6 @@ function genRecipe(rng: () => number, palette: string[]): { recipe: string[]; ta
   const d = shuffle(palette, rng).slice(0, 2);
   while (d.length < DOSES) d.push(d[0]);
   return { recipe: d, target: mix(d) };
-}
-
-function themeFor(palette: string[]): Theme {
-  const fams = palette.map((id) => PMAP[id].fam);
-  const hasW = palette.includes("W"), hasK = palette.includes("K");
-  const cool = fams.filter((f) => f === "blue" || f === "green").length;
-  const warm = fams.filter((f) => f === "red" || f === "magenta" || f === "yellow" || f === "violet" || f === "earth").length;
-  if (!hasW && !hasK) return { title: "PURE PIGMENT", sub: "No white, no black today — shift hue to lighten or shade." };
-  if (fams.includes("earth")) return { title: "THE EARTHS", sub: "Grounded, muted territory." };
-  if (cool >= 3) return { title: "COOL FRONT", sub: "Blues and greens lead the wheel." };
-  if (warm >= 3) return { title: "WARM SPECTRUM", sub: "Reds and yellows run hot." };
-  return { title: "FULL WHEEL", sub: "A broad spread across the spectrum." };
 }
 
 function hashDate(d: Date): number {
@@ -321,15 +363,15 @@ export function dateForOffset(offset: number): Date {
   return d;
 }
 
-export function dailyPuzzle(date: Date, size: number): Puzzle {
+export function dailyPuzzle(date: Date): Puzzle {
   const rng = mulberry32(hashDate(date));
-  const palette = genPalette(rng, size);
+  const { palette, theme } = pickDailyPalette(rng);
   const r = genRecipe(rng, palette);
   return {
     palette,
     target: r.target,
     canonical: r.recipe,
-    theme: themeFor(palette),
+    theme,
     num: dayNumber(date),
   };
 }

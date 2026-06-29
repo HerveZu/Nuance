@@ -1,4 +1,5 @@
 import "server-only";
+import { milliseconds } from "date-fns";
 import { cookies, headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth/auth";
@@ -11,7 +12,8 @@ import { env } from "@/env";
 // what these composable guards provide.
 
 const ANON_COOKIE = "nuance_anon";
-const ANON_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
+// `Set-Cookie` max-age is in seconds; derive it from a one-year duration.
+const ANON_COOKIE_MAX_AGE = milliseconds({ years: 1 }) / 1000;
 
 // A player is either a signed-in user or a persistent anonymous identity.
 // Anonymous subjects are graded server-side just the same, but never score on

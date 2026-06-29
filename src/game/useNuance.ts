@@ -1,27 +1,25 @@
 "use client";
 
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { milliseconds } from "date-fns";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useSession } from "@/auth/auth-client";
 import {
-  mix,
-  CELLS,
-  type BoardEntry,
-  type PublicPuzzle,
-  type Stats,
-} from "@/game/engine";
-import {
-  loadGame,
-  submitGuess,
   getMyStats,
   type LoadGameResult,
-  type SerializedGuess,
+  loadGame,
   type MyStats,
+  type SerializedGuess,
+  submitGuess,
 } from "@/game/actions";
-import { loadStats, saveStats, defaultStats } from "@/game/storage";
-import { useSession } from "@/auth/auth-client";
+import { type BoardEntry, CELLS, mix, type PublicPuzzle, type Stats } from "@/game/engine";
 import { KEY_CODES } from "@/game/keyboard";
+import { defaultStats, loadStats, saveStats } from "@/game/storage";
 
 type Status = "composing" | "won" | "lost";
+
+// How long the "copied!" share confirmation stays visible.
+const COPIED_FEEDBACK = milliseconds({ seconds: 1.8 });
 
 export interface Nuance {
   ready: boolean;
@@ -59,7 +57,10 @@ export interface Nuance {
 function entryFrom(g: SerializedGuess, weights: number[]): BoardEntry {
   const rgb = mix(g.recipe, weights);
   const win = g.clues.length === CELLS && g.clues.every((c) => c === "green");
-  return { recipe: g.recipe, fb: { matchPercent: g.matchPercent, clues: g.clues, deltaE: 0, win, rgb } };
+  return {
+    recipe: g.recipe,
+    fb: { matchPercent: g.matchPercent, clues: g.clues, deltaE: 0, win, rgb },
+  };
 }
 
 const gameKey = (dayOffset: number, userId: string | null) => ["game", dayOffset, userId] as const;
@@ -143,7 +144,10 @@ export function useNuance(): Nuance {
         if (signedIn) {
           void queryClient.invalidateQueries({ queryKey: ["myStats", userId] });
         } else if (data?.isToday && puzzle) {
-          queryClient.setQueryData<Stats>(ANON_STATS_KEY, nextAnonStats(res.status === "won", res.board.length, Number(puzzle.num)));
+          queryClient.setQueryData<Stats>(
+            ANON_STATS_KEY,
+            nextAnonStats(res.status === "won", res.board.length, Number(puzzle.num)),
+          );
         }
       }
     },
@@ -168,7 +172,13 @@ export function useNuance(): Nuance {
 
   const submit = useCallback(() => {
     const cur = latest.current;
-    if (cur.status !== "composing" || cur.composition.length !== CELLS || !cur.puzzle || cur.pending) return;
+    if (
+      cur.status !== "composing" ||
+      cur.composition.length !== CELLS ||
+      !cur.puzzle ||
+      cur.pending
+    )
+      return;
     mutateGuess(cur.composition.slice());
   }, [mutateGuess]);
 
@@ -189,7 +199,7 @@ export function useNuance(): Nuance {
       void navigator.clipboard.writeText(text);
       setCopied(true);
       if (copyTimer.current) clearTimeout(copyTimer.current);
-      copyTimer.current = setTimeout(() => setCopied(false), 1800);
+      copyTimer.current = setTimeout(() => setCopied(false), COPIED_FEEDBACK);
     } catch {}
   }, []);
 
@@ -201,14 +211,28 @@ export function useNuance(): Nuance {
       const cur = latest.current;
       if (cur.overlayOpen || !cur.puzzle) return;
       if (cur.screen === "launch") {
-        if (e.key === "Enter") { e.preventDefault(); startPlay(); }
+        if (e.key === "Enter") {
+          e.preventDefault();
+          startPlay();
+        }
         return;
       }
       if (cur.status !== "composing") return;
-      if (e.key === "Enter") { e.preventDefault(); submit(); return; }
-      if (e.key === "Backspace") { e.preventDefault(); removeDose(cur.composition.length - 1); return; }
+      if (e.key === "Enter") {
+        e.preventDefault();
+        submit();
+        return;
+      }
+      if (e.key === "Backspace") {
+        e.preventDefault();
+        removeDose(cur.composition.length - 1);
+        return;
+      }
       const idx = KEY_CODES.indexOf(e.code);
-      if (idx >= 0 && idx < cur.puzzle.palette.length) { e.preventDefault(); addDose(cur.puzzle.palette[idx]); }
+      if (idx >= 0 && idx < cur.puzzle.palette.length) {
+        e.preventDefault();
+        addDose(cur.puzzle.palette[idx]);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

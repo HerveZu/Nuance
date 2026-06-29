@@ -1,11 +1,13 @@
-import { POOL, CELLS, mix, pureMix, type Theme, type Puzzle } from "./engine";
-import { oklch, deltaE, type RGB } from "./color";
+import { differenceInCalendarDays, format, subDays } from "date-fns";
+import { deltaE, oklch, type RGB } from "./color";
+import { CELLS, mix, POOL, type Puzzle, pureMix, type Theme } from "./engine";
 
 const MIN_PALETTE_DIST = 0.05;
-const EPOCH = Date.UTC(2026, 1, 8);
+// Day #1 launch date — every puzzle is numbered by calendar days since this.
+const EPOCH = new Date(2026, 1, 8);
 
 function mulberry32(a: number): () => number {
-  return function () {
+  return () => {
     a |= 0;
     a = (a + 0x6d2b79f5) | 0;
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
@@ -34,7 +36,8 @@ const FAMILIES = ["red", "magenta", "violet", "orange", "yellow", "earth", "gree
 const BY_FAM: Record<string, string[]> = {};
 POOL.forEach((p) => {
   if (p.fam === "white" || p.fam === "black") return;
-  (BY_FAM[p.fam] ||= []).push(p.id);
+  BY_FAM[p.fam] ??= [];
+  BY_FAM[p.fam].push(p.id);
 });
 
 interface Archetype {
@@ -49,23 +52,125 @@ interface Archetype {
 // size) so the daily palette has a distinct character instead of every day
 // sampling the same broad spread of the pool.
 const ARCHETYPES: Archetype[] = [
-  { title: "WARM SPECTRUM", sub: "Reds and yellows run hot.", weights: { red: 4, orange: 3, yellow: 3, magenta: 2, earth: 2 }, neutralsMax: 1, size: [8, 11] },
-  { title: "COOL FRONT", sub: "Blues and greens lead the wheel.", weights: { blue: 4, green: 3, violet: 3, magenta: 1 }, neutralsMax: 2, size: [8, 10] },
-  { title: "THE EARTHS", sub: "Grounded, muted territory.", weights: { earth: 5, orange: 2, yellow: 2, red: 2, green: 1 }, neutralsMax: 1, size: [8, 10] },
-  { title: "SUNSET", sub: "Warm analogous — reds melting into gold.", weights: { red: 4, orange: 4, yellow: 3, magenta: 3 }, neutralsMax: 1, size: [7, 9] },
-  { title: "FOREST & SKY", sub: "Greens and blues, leaf to horizon.", weights: { green: 4, blue: 3, yellow: 2, earth: 3 }, neutralsMax: 1, size: [8, 10] },
-  { title: "JEWEL BOX", sub: "Deep, saturated violets, blues and greens.", weights: { violet: 3, blue: 3, magenta: 3, green: 2, red: 2 }, neutralsMax: 1, size: [8, 10] },
-  { title: "BRUISED VIOLETS", sub: "Violets and magentas, low and moody.", weights: { violet: 4, magenta: 3, blue: 2, red: 2 }, neutralsMax: 1, size: [7, 9] },
-  { title: "SEA GLASS", sub: "Soft greens and cyans, washed pale.", weights: { green: 4, blue: 4, yellow: 1 }, neutralsMax: 2, size: [7, 9] },
-  { title: "AUTUMN", sub: "Earths, ochre and rust turning over.", weights: { earth: 4, orange: 3, red: 3, yellow: 2 }, neutralsMax: 1, size: [8, 10] },
-  { title: "NOCTURNE", sub: "Blues and violets sinking into black.", weights: { blue: 4, violet: 3, magenta: 1 }, neutralsMax: 1, size: [7, 9] },
-  { title: "CITRUS", sub: "Bright yellows, oranges and lime.", weights: { yellow: 4, orange: 3, green: 2 }, neutralsMax: 1, size: [6, 8] },
-  { title: "ROSE GARDEN", sub: "Reds and pinks with a leaf of green.", weights: { red: 3, magenta: 3, violet: 1, green: 1 }, neutralsMax: 1, size: [7, 9] },
-  { title: "MEADOW", sub: "Fresh greens and yellows under open sky.", weights: { green: 4, yellow: 3, earth: 1, blue: 1 }, neutralsMax: 1, size: [8, 10] },
-  { title: "TROPICAL", sub: "Vivid cyan, green and magenta, no muting.", weights: { green: 3, blue: 3, magenta: 2, orange: 2 }, neutralsMax: 0, size: [7, 9] },
-  { title: "GLACIER", sub: "Pale blues and ice, barely tinted.", weights: { blue: 4, green: 2, violet: 1 }, neutralsMax: 2, size: [6, 8] },
-  { title: "PURE PIGMENT", sub: "No white, no black — shift hue to lighten or shade.", weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 1, earth: 1 }, neutralsMax: 0, size: [8, 10] },
-  { title: "FULL WHEEL", sub: "A broad spread across the spectrum.", weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 2, earth: 2 }, neutralsMax: 2, size: [10, 13] },
+  {
+    title: "WARM SPECTRUM",
+    sub: "Reds and yellows run hot.",
+    weights: { red: 4, orange: 3, yellow: 3, magenta: 2, earth: 2 },
+    neutralsMax: 1,
+    size: [8, 11],
+  },
+  {
+    title: "COOL FRONT",
+    sub: "Blues and greens lead the wheel.",
+    weights: { blue: 4, green: 3, violet: 3, magenta: 1 },
+    neutralsMax: 2,
+    size: [8, 10],
+  },
+  {
+    title: "THE EARTHS",
+    sub: "Grounded, muted territory.",
+    weights: { earth: 5, orange: 2, yellow: 2, red: 2, green: 1 },
+    neutralsMax: 1,
+    size: [8, 10],
+  },
+  {
+    title: "SUNSET",
+    sub: "Warm analogous — reds melting into gold.",
+    weights: { red: 4, orange: 4, yellow: 3, magenta: 3 },
+    neutralsMax: 1,
+    size: [7, 9],
+  },
+  {
+    title: "FOREST & SKY",
+    sub: "Greens and blues, leaf to horizon.",
+    weights: { green: 4, blue: 3, yellow: 2, earth: 3 },
+    neutralsMax: 1,
+    size: [8, 10],
+  },
+  {
+    title: "JEWEL BOX",
+    sub: "Deep, saturated violets, blues and greens.",
+    weights: { violet: 3, blue: 3, magenta: 3, green: 2, red: 2 },
+    neutralsMax: 1,
+    size: [8, 10],
+  },
+  {
+    title: "BRUISED VIOLETS",
+    sub: "Violets and magentas, low and moody.",
+    weights: { violet: 4, magenta: 3, blue: 2, red: 2 },
+    neutralsMax: 1,
+    size: [7, 9],
+  },
+  {
+    title: "SEA GLASS",
+    sub: "Soft greens and cyans, washed pale.",
+    weights: { green: 4, blue: 4, yellow: 1 },
+    neutralsMax: 2,
+    size: [7, 9],
+  },
+  {
+    title: "AUTUMN",
+    sub: "Earths, ochre and rust turning over.",
+    weights: { earth: 4, orange: 3, red: 3, yellow: 2 },
+    neutralsMax: 1,
+    size: [8, 10],
+  },
+  {
+    title: "NOCTURNE",
+    sub: "Blues and violets sinking into black.",
+    weights: { blue: 4, violet: 3, magenta: 1 },
+    neutralsMax: 1,
+    size: [7, 9],
+  },
+  {
+    title: "CITRUS",
+    sub: "Bright yellows, oranges and lime.",
+    weights: { yellow: 4, orange: 3, green: 2 },
+    neutralsMax: 1,
+    size: [6, 8],
+  },
+  {
+    title: "ROSE GARDEN",
+    sub: "Reds and pinks with a leaf of green.",
+    weights: { red: 3, magenta: 3, violet: 1, green: 1 },
+    neutralsMax: 1,
+    size: [7, 9],
+  },
+  {
+    title: "MEADOW",
+    sub: "Fresh greens and yellows under open sky.",
+    weights: { green: 4, yellow: 3, earth: 1, blue: 1 },
+    neutralsMax: 1,
+    size: [8, 10],
+  },
+  {
+    title: "TROPICAL",
+    sub: "Vivid cyan, green and magenta, no muting.",
+    weights: { green: 3, blue: 3, magenta: 2, orange: 2 },
+    neutralsMax: 0,
+    size: [7, 9],
+  },
+  {
+    title: "GLACIER",
+    sub: "Pale blues and ice, barely tinted.",
+    weights: { blue: 4, green: 2, violet: 1 },
+    neutralsMax: 2,
+    size: [6, 8],
+  },
+  {
+    title: "PURE PIGMENT",
+    sub: "No white, no black — shift hue to lighten or shade.",
+    weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 1, earth: 1 },
+    neutralsMax: 0,
+    size: [8, 10],
+  },
+  {
+    title: "FULL WHEEL",
+    sub: "A broad spread across the spectrum.",
+    weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 2, earth: 2 },
+    neutralsMax: 2,
+    size: [10, 13],
+  },
 ];
 
 function weightedPick(fams: string[], weights: Record<string, number>, rng: () => number): string {
@@ -101,7 +206,9 @@ function pickDailyPalette(rng: () => number): { palette: string[]; theme: Theme 
   // Chromatic pigments drawn family-by-family, weighted toward the archetype.
   const pool: Record<string, string[]> = {};
   let active = FAMILIES.filter((f) => arch.weights[f] && BY_FAM[f]);
-  active.forEach((f) => { pool[f] = shuffle(BY_FAM[f], rng); });
+  active.forEach((f) => {
+    pool[f] = shuffle(BY_FAM[f], rng);
+  });
   // Only ever draw from the archetype's families — if they run dry before
   // reaching the target size the palette simply ends up smaller, keeping each
   // day's mood pure rather than diluting it with off-theme colours.
@@ -109,7 +216,12 @@ function pickDailyPalette(rng: () => number): { palette: string[]; theme: Theme 
   while (picked.length < size && active.length && guard++ < 3000) {
     const fam = weightedPick(active, arch.weights, rng);
     const fp = pool[fam];
-    while (fp.length && !tryAdd(fp.shift()!)) { /* skip near-identical pigments */ }
+    // shift through this family's pigments until one is accepted (others are
+    // skipped as near-identical to an already-picked colour).
+    while (fp.length) {
+      const next = fp.shift();
+      if (next === undefined || tryAdd(next)) break;
+    }
     if (!fp.length) active = active.filter((f) => f !== fam);
   }
 
@@ -123,7 +235,11 @@ function genWeights(rng: () => number): number[] {
   return shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9], rng).slice(0, CELLS);
 }
 
-function genRecipe(rng: () => number, palette: string[], weights: number[]): { recipe: string[]; target: RGB } {
+function genRecipe(
+  rng: () => number,
+  palette: string[],
+  weights: number[],
+): { recipe: string[]; target: RGB } {
   for (let n = 0; n < 500; n++) {
     const distinct = Math.min(rng() < 0.45 ? 2 : 3, palette.length);
     const chosen = shuffle(palette, rng).slice(0, distinct);
@@ -143,25 +259,22 @@ function genRecipe(rng: () => number, palette: string[], weights: number[]): { r
   return { recipe, target: mix(recipe, weights) };
 }
 
+// Stable per-calendar-day seed (e.g. 20260208) so a given day always generates
+// the same puzzle, independent of the viewer's clock time within that day.
 function hashDate(d: Date): number {
-  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
+  return Number(format(d, "yyyyMMdd"));
 }
 
 export function dayNumber(d: Date): number {
-  const u = Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
-  return Math.floor((u - EPOCH) / 86400000);
+  return differenceInCalendarDays(d, EPOCH);
 }
 
 export function dateKey(d: Date): string {
-  const m = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
-  return d.getFullYear() + "-" + m + "-" + day;
+  return format(d, "yyyy-MM-dd");
 }
 
 export function dateForOffset(offset: number): Date {
-  const d = new Date();
-  d.setDate(d.getDate() - offset);
-  return d;
+  return subDays(new Date(), offset);
 }
 
 export function dailyPuzzle(date: Date): Puzzle {

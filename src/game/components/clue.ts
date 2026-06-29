@@ -1,5 +1,5 @@
 import { Check, ArrowLeftRight, type LucideIcon } from "lucide-react";
-import type { Clue } from "@/lib/engine";
+import type { Clue } from "@/game/engine";
 
 // Single source of truth for the two "positive" clues. The colour, icon, and
 // human label live here so the board cells (ClueIcon), the legend (ClueLegend),

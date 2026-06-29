@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { GhostButton } from "./ui/buttons";
-import { PageHeading } from "./ui/PageHeading";
-import { AuthControl } from "./AuthControl";
+import { GhostButton } from "@/components/ui/buttons";
+import { PageHeading } from "@/components/ui/PageHeading";
+import { AuthControl } from "@/auth/AuthControl";
 
 interface HeaderProps {
   num: number | string;

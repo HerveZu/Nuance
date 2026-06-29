@@ -1,4 +1,4 @@
-import type { Clue } from "@/lib/engine";
+import type { Clue } from "@/game/engine";
 import { CLUE_META, hasClueIcon } from "./clue";
 
 export { hasClueIcon };

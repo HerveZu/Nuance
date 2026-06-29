@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Trophy, LogOut } from "lucide-react";
-import { useSession, signOut } from "@/lib/auth-client";
+import { useSession, signOut } from "@/auth/auth-client";
 import { cn } from "@/lib/utils";
-import { AuthDialog } from "./AuthDialog";
-import { GhostButton, gameButtonVariants } from "./ui/buttons";
+import { AuthDialog } from "@/auth/AuthDialog";
+import { GhostButton, gameButtonVariants } from "@/components/ui/buttons";
 import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
 import {
   DropdownMenu,

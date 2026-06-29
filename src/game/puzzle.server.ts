@@ -1,6 +1,6 @@
 import "server-only";
-import type { Puzzle, PublicPuzzle } from "@/lib/engine";
-import { dailyPuzzle, dateForOffset, dayNumber } from "@/lib/daily";
+import type { Puzzle, PublicPuzzle } from "@/game/engine";
+import { dailyPuzzle, dateForOffset, dayNumber } from "@/game/daily";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 

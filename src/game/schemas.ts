@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { CELLS } from "@/lib/engine";
+import { CELLS } from "@/game/engine";
 
 // Parsing/validation schemas for game input, shared by the public HTTP API and
 // the game core. All request parsing goes through zod rather than ad-hoc checks.
 
 // offset: 0 = today, a positive integer = that many days into the past. Never
 // negative — a caller must not be able to target a *future* puzzle. The server
-// clock is the sole authority for which day is "today" (see lib/game.ts).
+// clock is the sole authority for which day is "today" (see @/game/service).
 export const offsetSchema = z.coerce.number().int().min(0);
 
 // Shape of a guess: exactly CELLS positional pigment ids. Per-puzzle palette

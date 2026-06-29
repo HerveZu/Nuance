@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ANON_COOKIE, ANON_COOKIE_MAX_AGE } from "@/lib/auth-guards";
+import { ANON_COOKIE, ANON_COOKIE_MAX_AGE } from "@/auth/guards";
 
 // Helpers for the public HTTP API (src/app/api/game). Per the Next.js 16
 // route-handler docs, CORS is configured per route handler — these helpers

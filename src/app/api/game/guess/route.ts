@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
-import { resolveAnonSubject } from "@/lib/auth-guards";
-import { submitGuess } from "@/lib/game";
-import { guessRequestSchema } from "@/lib/schemas";
+import { resolveAnonSubject } from "@/auth/guards";
+import { submitGuess } from "@/game/service";
+import { guessRequestSchema } from "@/game/schemas";
 import { json, preflight } from "@/lib/api";
 
 // Public, anonymous-only game API.

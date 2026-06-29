@@ -1,5 +1,5 @@
-import type { Clue } from "@/lib/engine";
-import { ClueIcon } from "./ui/ClueIcon";
+import type { Clue } from "@/game/engine";
+import { ClueIcon } from "./ClueIcon";
 
 interface PaletteChipProps {
   name: string;

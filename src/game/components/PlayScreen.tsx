@@ -7,14 +7,14 @@ import {
   type BoardEntry,
   type Clue,
   type PublicPuzzle,
-} from "@/lib/engine";
-import { fgFor, rgbToCss } from "@/lib/color";
-import { useKeyLabels } from "@/lib/keyboard";
+} from "@/game/engine";
+import { fgFor, rgbToCss } from "@/game/color";
+import { useKeyLabels } from "@/game/keyboard";
 import { ClueLegend } from "./ClueLegend";
-import { SectionLabel } from "./ui/SectionLabel";
-import { hasClueIcon } from "./ui/ClueIcon";
-import { PrimaryButton } from "./ui/buttons";
-import { Swatch } from "./ui/Swatch";
+import { SectionLabel } from "./SectionLabel";
+import { hasClueIcon } from "./ClueIcon";
+import { PrimaryButton } from "@/components/ui/buttons";
+import { Swatch } from "./Swatch";
 import { PaletteChip } from "./PaletteChip";
 import { GuessRow, type RowCell } from "./GuessRow";
 

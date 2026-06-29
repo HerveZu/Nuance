@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Game from "./Game";
+import Game from "@/game/Game";
 import { Analytics } from "@vercel/analytics/next";
-import { dayNumber, dateForOffset } from "@/lib/daily";
+import { dayNumber, dateForOffset } from "@/game/daily";
 
 export const dynamic = "force-dynamic";
 

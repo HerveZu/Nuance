@@ -1,7 +1,7 @@
 import "server-only";
 import { cookies, headers } from "next/headers";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
+import { auth } from "@/auth/auth";
 
 // Next.js 16 renamed `middleware` to `proxy`, and its docs explicitly
 // discourage using proxy as an auth/session layer (it runs at the network
@@ -14,7 +14,7 @@ const ANON_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 // A player is either a signed-in user or a persistent anonymous identity.
 // Anonymous subjects are graded server-side just the same, but never score on
-// the leaderboard (see recordStats in lib/game.ts).
+// the leaderboard (see recordStats in @/game/service).
 export interface Subject {
   type: "user" | "anon";
   id: string;

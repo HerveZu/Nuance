@@ -8,7 +8,7 @@ import {
   jsonb,
   unique,
 } from "drizzle-orm/pg-core";
-import type { Clue } from "../lib/engine";
+import type { Clue } from "@/game/engine";
 
 /* ---------------------------------------------------------------------------
  * better-auth core tables (must match better-auth's expected field names).

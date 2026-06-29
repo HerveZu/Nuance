@@ -1,4 +1,4 @@
-import { CLUE_META } from "./ui/clue";
+import { CLUE_META } from "./clue";
 
 const CLUES = ["green", "yellow"] as const;
 

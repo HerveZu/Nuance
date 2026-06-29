@@ -8,7 +8,7 @@ import {
   type BoardEntry,
   type PublicPuzzle,
   type Stats,
-} from "@/lib/engine";
+} from "@/game/engine";
 import {
   loadGame,
   submitGuess,
@@ -16,10 +16,10 @@ import {
   type LoadGameResult,
   type SerializedGuess,
   type MyStats,
-} from "@/app/actions";
-import { loadStats, saveStats, defaultStats } from "@/lib/storage";
-import { useSession } from "@/lib/auth-client";
-import { KEY_CODES } from "@/lib/keyboard";
+} from "@/game/actions";
+import { loadStats, saveStats, defaultStats } from "@/game/storage";
+import { useSession } from "@/auth/auth-client";
+import { KEY_CODES } from "@/game/keyboard";
 
 type Status = "composing" | "won" | "lost";
 

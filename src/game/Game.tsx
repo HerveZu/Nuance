@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import { useNuance } from "@/hooks/useNuance";
+import { useNuance } from "@/game/useNuance";
 import { PageShell } from "@/components/ui/PageShell";
-import { Header } from "@/components/Header";
-import { LaunchScreen } from "@/components/LaunchScreen";
-import { PlayScreen } from "@/components/PlayScreen";
-import { ResultsOverlay } from "@/components/ResultsOverlay";
+import { Header } from "@/game/components/Header";
+import { LaunchScreen } from "@/game/components/LaunchScreen";
+import { PlayScreen } from "@/game/components/PlayScreen";
+import { ResultsOverlay } from "@/game/components/ResultsOverlay";
 
 export default function Game() {
   const n = useNuance();

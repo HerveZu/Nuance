@@ -1,8 +1,8 @@
 import { ArrowRight } from "lucide-react";
-import { getPigment, pureMix, type PublicPuzzle } from "@/lib/engine";
-import { rgbToCss } from "@/lib/color";
-import { PrimaryButton } from "./ui/buttons";
-import { Surface } from "./ui/Surface";
+import { getPigment, pureMix, type PublicPuzzle } from "@/game/engine";
+import { rgbToCss } from "@/game/color";
+import { PrimaryButton } from "@/components/ui/buttons";
+import { Surface } from "@/components/ui/Surface";
 
 export function LaunchScreen({ puzzle, onPlay }: { puzzle: PublicPuzzle; onPlay: () => void }) {
   return (

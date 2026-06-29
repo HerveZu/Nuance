@@ -11,16 +11,16 @@ import {
   type BoardEntry,
   type PublicPuzzle,
   type Stats,
-} from "@/lib/engine";
-import type { MyStats } from "@/app/actions";
-import { rgbToCss } from "@/lib/color";
+} from "@/game/engine";
+import type { MyStats } from "@/game/actions";
+import { rgbToCss } from "@/game/color";
 import { X, Check, Trophy } from "lucide-react";
-import { SectionLabel } from "./ui/SectionLabel";
-import { Surface } from "./ui/Surface";
-import { Swatch } from "./ui/Swatch";
-import { CLUE_META } from "./ui/clue";
-import { PrimaryButton, GhostButton } from "./ui/buttons";
-import { AuthDialog } from "./AuthDialog";
+import { SectionLabel } from "./SectionLabel";
+import { Surface } from "@/components/ui/Surface";
+import { Swatch } from "./Swatch";
+import { CLUE_META } from "./clue";
+import { PrimaryButton, GhostButton } from "@/components/ui/buttons";
+import { AuthDialog } from "@/auth/AuthDialog";
 
 interface ResultsOverlayProps {
   puzzle: PublicPuzzle;

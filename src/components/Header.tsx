@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GhostButton } from "./ui/buttons";
+import { AuthControl } from "./AuthControl";
 
 interface HeaderProps {
   num: number | string;
@@ -45,6 +46,7 @@ export function Header({ num, dateLabel, isToday, canGoBack, finished, onPrev, o
         >
           <ChevronRight size={18} aria-label="Next day" />
         </GhostButton>
+        <AuthControl />
       </div>
     </div>
   );

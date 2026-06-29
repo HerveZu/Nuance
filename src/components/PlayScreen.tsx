@@ -6,7 +6,7 @@ import {
   GUESSES,
   type BoardEntry,
   type Clue,
-  type Puzzle,
+  type PublicPuzzle,
 } from "@/lib/engine";
 import { fgFor, rgbToCss } from "@/lib/color";
 import { useKeyLabels } from "@/lib/keyboard";
@@ -18,7 +18,7 @@ import { PaletteChip } from "./PaletteChip";
 import { GuessRow, type RowCell } from "./GuessRow";
 
 interface PlayScreenProps {
-  puzzle: Puzzle;
+  puzzle: PublicPuzzle;
   composition: string[];
   board: BoardEntry[];
   finished: boolean;

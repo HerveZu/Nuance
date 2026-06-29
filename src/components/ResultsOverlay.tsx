@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
 import {
   buildShareText,
   getPigment,
@@ -5,20 +9,25 @@ import {
   recipeText,
   GUESSES,
   type BoardEntry,
-  type Puzzle,
+  type PublicPuzzle,
   type Stats,
 } from "@/lib/engine";
+import type { MyStats } from "@/app/actions";
 import { rgbToCss } from "@/lib/color";
-import { X, Check } from "lucide-react";
+import { X, Check, Trophy } from "lucide-react";
 import { SectionLabel } from "./ui/SectionLabel";
-import { PrimaryButton } from "./ui/buttons";
+import { PrimaryButton, GhostButton } from "./ui/buttons";
+import { AuthDialog } from "./AuthDialog";
 
 interface ResultsOverlayProps {
-  puzzle: Puzzle;
+  puzzle: PublicPuzzle;
   board: BoardEntry[];
+  recipe: string[];
   won: boolean;
-  free: boolean;
-  stats: Stats;
+  isToday: boolean;
+  signedIn: boolean;
+  myStats: MyStats | null;
+  anonStats: Stats;
   copied: boolean;
   onClose: () => void;
   onShare: (text: string) => void;
@@ -33,10 +42,41 @@ function Stat({ value, label }: { value: number | string; label: string }) {
   );
 }
 
-export function ResultsOverlay({ puzzle, board, won, free, stats, copied, onClose, onShare }: ResultsOverlayProps) {
-  const winPct = stats.played ? Math.round(((stats.wins || 0) / stats.played) * 100) : 0;
+export function ResultsOverlay({
+  puzzle,
+  board,
+  recipe,
+  won,
+  isToday,
+  signedIn,
+  myStats,
+  anonStats,
+  copied,
+  onClose,
+  onShare,
+}: ResultsOverlayProps) {
+  const [authOpen, setAuthOpen] = useState(false);
   const shareText = buildShareText(board, puzzle, won);
   const CELL_UNIT = 13; // px of bar height per matched cell
+
+  const stats = (() => {
+    if (signedIn && myStats) {
+      const winPct = myStats.gamesPlayed ? Math.round((myStats.gamesWon / myStats.gamesPlayed) * 100) : 0;
+      return [
+        { value: myStats.gamesPlayed, label: "PLAYED" },
+        { value: winPct, label: "WIN %" },
+        { value: myStats.avgScore != null ? myStats.avgScore.toFixed(1) : "–", label: "AVG" },
+        { value: myStats.currentStreak, label: "STREAK" },
+      ];
+    }
+    const winPct = anonStats.played ? Math.round(((anonStats.wins || 0) / anonStats.played) * 100) : 0;
+    return [
+      { value: anonStats.played || 0, label: "PLAYED" },
+      { value: winPct, label: "WIN %" },
+      { value: anonStats.currentStreak || 0, label: "STREAK" },
+      { value: anonStats.maxStreak || 0, label: "MAX" },
+    ];
+  })();
 
   return (
     <div className="fixed inset-0 flex items-center justify-center p-5 z-50" style={{ background: "rgba(22,19,15,0.55)" }}>
@@ -48,7 +88,7 @@ export function ResultsOverlay({ puzzle, board, won, free, stats, copied, onClos
             </div>
             <div className="font-mono text-base text-sub mt-1.5">
               {won
-                ? `Matched in ${board.length}/${GUESSES}${free ? " · free play" : ""}`
+                ? `Matched in ${board.length}/${GUESSES}${!isToday ? " · free play" : ""}`
                 : "The target recipe is revealed below."}
             </div>
           </div>
@@ -59,20 +99,19 @@ export function ResultsOverlay({ puzzle, board, won, free, stats, copied, onClos
 
         <SectionLabel className="mt-[22px] mb-2.5">THE RECIPE</SectionLabel>
         <div className="flex gap-1.5">
-          {puzzle.canonical.map((id, i) => (
+          {recipe.map((id, i) => (
             <div key={i} style={{ flexGrow: puzzle.weights[i], flexBasis: 0 }}>
               <div className="h-12 border border-line rounded-card" style={{ background: rgbToCss(pureMix(id)) }} />
               <div className="font-mono text-2xs text-sub text-center mt-1">{getPigment(id).code.split("-")[0]}</div>
             </div>
           ))}
         </div>
-        <div className="text-md text-sub mt-3">{recipeText(puzzle.canonical, puzzle.weights)}</div>
+        <div className="text-md text-sub mt-3">{recipeText(recipe, puzzle.weights)}</div>
 
         <div className="flex gap-2 mt-6 mb-1.5">
-          <Stat value={stats.played || 0} label="PLAYED" />
-          <Stat value={winPct} label="WIN %" />
-          <Stat value={stats.currentStreak || 0} label="STREAK" />
-          <Stat value={stats.maxStreak || 0} label="MAX" />
+          {stats.map((s) => (
+            <Stat key={s.label} value={s.value} label={s.label} />
+          ))}
         </div>
 
         <SectionLabel className="mt-[22px] mb-2.5">GUESS DISTRIBUTION</SectionLabel>
@@ -99,13 +138,31 @@ export function ResultsOverlay({ puzzle, board, won, free, stats, copied, onClos
           })}
         </div>
 
+        {!signedIn && (
+          <div className="bg-ground border border-line rounded-card py-3.5 px-4 mt-6">
+            <p className="font-mono text-md text-sub mb-2.5">Sign in to compete on the global leaderboard and keep your streak.</p>
+            <PrimaryButton onClick={() => setAuthOpen(true)} className="w-full inline-flex items-center justify-center text-md tracking-[0.1em] py-2.5">
+              Sign in
+            </PrimaryButton>
+          </div>
+        )}
+
         <div className="font-mono text-md whitespace-pre leading-[1.5] bg-ground border border-line rounded-card py-3.5 px-4 mt-6 mb-3.5 overflow-x-auto">
           {shareText}
         </div>
-        <PrimaryButton onClick={() => onShare(shareText)} className="w-full inline-flex items-center justify-center gap-1.5 text-md tracking-[0.1em] py-[15px]">
-          {copied ? (<><Check size={15} /> COPIED</>) : "SHARE RESULT"}
-        </PrimaryButton>
+        <div className="flex gap-2">
+          <PrimaryButton onClick={() => onShare(shareText)} className="flex-1 inline-flex items-center justify-center gap-1.5 text-md tracking-[0.1em] py-[15px]">
+            {copied ? (<><Check size={15} /> COPIED</>) : "SHARE RESULT"}
+          </PrimaryButton>
+          <Link href="/leaderboard" className="shrink-0">
+            <GhostButton className="h-full inline-flex items-center justify-center gap-1.5 text-md tracking-[0.08em] uppercase px-4">
+              <Trophy size={15} /> Board
+            </GhostButton>
+          </Link>
+        </div>
       </div>
+
+      <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
     </div>
   );
 }

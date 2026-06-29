@@ -9,12 +9,13 @@ import { ResultsOverlay } from "@/components/ResultsOverlay";
 
 export default function Game() {
   const n = useNuance();
+  const num = n.puzzle?.num;
 
   useEffect(() => {
-    document.title = `Nuance.day #${n.puzzle.num}`;
-  }, [n.puzzle.num]);
+    if (num != null) document.title = `Nuance.day #${num}`;
+  }, [num]);
 
-  if (!n.ready) return <div className="min-h-screen bg-ground" />;
+  if (!n.ready || !n.puzzle) return <div className="min-h-screen bg-ground" />;
 
   return (
     <div className="h-[100svh] md:h-auto md:min-h-screen overflow-hidden md:overflow-visible bg-ground text-ink font-ui p-4 md:p-5 md:pb-8 flex flex-col">
@@ -47,13 +48,16 @@ export default function Game() {
         </div>
       </div>
 
-      {n.overlayOpen && (
+      {n.overlayOpen && n.recipe && (
         <ResultsOverlay
           puzzle={n.puzzle}
           board={n.board}
+          recipe={n.recipe}
           won={n.status === "won"}
-          free={n.free}
-          stats={n.stats}
+          isToday={n.isToday}
+          signedIn={n.signedIn}
+          myStats={n.myStats}
+          anonStats={n.anonStats}
           copied={n.copied}
           onClose={n.closeOverlay}
           onShare={n.share}

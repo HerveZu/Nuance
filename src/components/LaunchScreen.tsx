@@ -1,9 +1,9 @@
 import { ArrowRight } from "lucide-react";
-import { getPigment, pureMix, type Puzzle } from "@/lib/engine";
+import { getPigment, pureMix, type PublicPuzzle } from "@/lib/engine";
 import { rgbToCss } from "@/lib/color";
 import { PrimaryButton } from "./ui/buttons";
 
-export function LaunchScreen({ puzzle, onPlay }: { puzzle: Puzzle; onPlay: () => void }) {
+export function LaunchScreen({ puzzle, onPlay }: { puzzle: PublicPuzzle; onPlay: () => void }) {
   return (
     <div className="text-center">
       <div className="font-mono text-sm tracking-[0.28em] text-sub mb-3">TODAY&apos;S PALETTE</div>

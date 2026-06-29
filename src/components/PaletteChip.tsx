@@ -28,6 +28,14 @@ export function PaletteChip({ name, code, css, keyLabel, clue, iconColor, exclud
         <span className="absolute top-0.5 right-1 leading-none">
           <ClueIcon clue={clue} color={iconColor} size={18} />
         </span>
+        {excluded && (
+          <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+            <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+              <line x1="0" y1="0" x2="100" y2="100" stroke="rgba(0,0,0,0.55)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+              <line x1="100" y1="0" x2="0" y2="100" stroke="rgba(0,0,0,0.55)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+            </svg>
+          </span>
+        )}
       </div>
       <div className="px-1 pt-0.5 pb-0.5 md:px-1.5 md:pt-[3px] md:pb-1">
         <div className="font-medium text-2xs md:text-xs text-ink leading-[1.15] whitespace-nowrap overflow-hidden text-ellipsis">

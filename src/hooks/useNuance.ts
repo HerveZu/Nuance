@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import {
   mix,
   CELLS,
@@ -8,7 +9,14 @@ import {
   type PublicPuzzle,
   type Stats,
 } from "@/lib/engine";
-import { loadGame, submitGuess, getMyStats, type SerializedGuess, type MyStats } from "@/app/actions";
+import {
+  loadGame,
+  submitGuess,
+  getMyStats,
+  type LoadGameResult,
+  type SerializedGuess,
+  type MyStats,
+} from "@/app/actions";
 import { loadStats, saveStats, defaultStats } from "@/lib/storage";
 import { useSession } from "@/lib/auth-client";
 import { KEY_CODES } from "@/lib/keyboard";
@@ -54,82 +62,103 @@ function entryFrom(g: SerializedGuess, weights: number[]): BoardEntry {
   return { recipe: g.recipe, fb: { matchPercent: g.matchPercent, clues: g.clues, deltaE: 0, win, rgb } };
 }
 
+const gameKey = (dayOffset: number, userId: string | null) => ["game", dayOffset, userId] as const;
+const ANON_STATS_KEY = ["anonStats"] as const;
+
 export function useNuance(): Nuance {
   const { data: session } = useSession();
   const signedIn = !!session?.user;
   const userId = session?.user?.id ?? null;
+  const queryClient = useQueryClient();
 
-  const [ready, setReady] = useState(false);
-  const [screen, setScreen] = useState<"launch" | "play">("launch");
+  // Local UI state only (not server data): the selected day, the in-progress
+  // composition, whether the player has entered the board, the results overlay,
+  // and the share toast. Everything server-authoritative is TanStack Query.
   const [dayOffset, setDayOffset] = useState(0);
-  const [puzzle, setPuzzle] = useState<PublicPuzzle | null>(null);
   const [composition, setComposition] = useState<string[]>([]);
-  const [board, setBoard] = useState<BoardEntry[]>([]);
-  const [status, setStatus] = useState<Status>("composing");
-  const [recipe, setRecipe] = useState<string[] | null>(null);
-  const [isToday, setIsToday] = useState(true);
-  const [canGoBack, setCanGoBack] = useState(false);
-  const [dateLabel, setDateLabel] = useState("TODAY");
+  const [started, setStarted] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
-  const [pending, setPending] = useState(false);
-  const [myStats, setMyStats] = useState<MyStats | null>(null);
-  const [anonStats, setAnonStats] = useState<Stats>(defaultStats);
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const latest = useRef({ dayOffset, puzzle, composition, board, status, overlayOpen, screen, isToday });
+  // Reset the per-day UI state when the day or signed-in identity changes —
+  // done at render time (React's recommended pattern) rather than in an effect.
+  const resetKey = `${dayOffset}:${userId}`;
+  const [trackedKey, setTrackedKey] = useState(resetKey);
+  if (trackedKey !== resetKey) {
+    setTrackedKey(resetKey);
+    setComposition([]);
+    setStarted(false);
+    setOverlayOpen(false);
+    setCopied(false);
+  }
+
+  // Server-authoritative game state for the current day + identity. A change of
+  // day or signed-in user is a new query key, so the switch is a refetch rather
+  // than a manual reload; previous data stays on screen while the next loads.
+  const gameQuery = useQuery({
+    queryKey: gameKey(dayOffset, userId),
+    queryFn: () => loadGame(dayOffset),
+    placeholderData: keepPreviousData,
+  });
+  const data = gameQuery.data ?? null;
+  const puzzle = data?.puzzle ?? null;
+  const status: Status = data?.status ?? "composing";
+  const recipe = data?.recipe ?? null;
+  const board = useMemo<BoardEntry[]>(
+    () => (data ? data.board.map((g) => entryFrom(g, data.puzzle.weights)) : []),
+    [data],
+  );
+  const finished = status !== "composing";
+  const screen: "launch" | "play" = board.length > 0 || started ? "play" : "launch";
+
+  // The signed-in player's competitive stats for the results overlay.
+  const myStatsQuery = useQuery({
+    queryKey: ["myStats", userId],
+    queryFn: getMyStats,
+    enabled: signedIn,
+  });
+  const myStats = myStatsQuery.data ?? null;
+
+  // Anonymous players keep a local (localStorage) stats aggregate, read through
+  // the query cache so the results overlay updates without manual state.
+  const anonStatsQuery = useQuery({
+    queryKey: ANON_STATS_KEY,
+    queryFn: () => loadStats(),
+    enabled: !signedIn,
+  });
+  const anonStats = anonStatsQuery.data ?? defaultStats();
+
+  const guessMutation = useMutation({
+    mutationFn: (guess: string[]) => submitGuess(dayOffset, guess),
+    onSuccess: (res) => {
+      // The submission returns the authoritative new state — write it straight
+      // into the cache instead of refetching the whole game.
+      queryClient.setQueryData<LoadGameResult>(gameKey(dayOffset, userId), (old) =>
+        old ? { ...old, board: res.board, status: res.status, recipe: res.recipe } : old,
+      );
+      setComposition([]);
+      if (res.status !== "composing") {
+        setOverlayOpen(true);
+        if (signedIn) {
+          void queryClient.invalidateQueries({ queryKey: ["myStats", userId] });
+        } else if (data?.isToday && puzzle) {
+          queryClient.setQueryData<Stats>(ANON_STATS_KEY, nextAnonStats(res.status === "won", res.board.length, Number(puzzle.num)));
+        }
+      }
+    },
+  });
+  const { mutate: mutateGuess, isPending: pending } = guessMutation;
+
+  // Current values readable from stable event handlers without re-binding them.
+  const latest = useRef({ puzzle, composition, status, overlayOpen, screen, pending });
   useEffect(() => {
-    latest.current = { dayOffset, puzzle, composition, board, status, overlayOpen, screen, isToday };
+    latest.current = { puzzle, composition, status, overlayOpen, screen, pending };
   });
 
-  const applyLoad = useCallback((offset: number) => {
-    setPending(true);
-    loadGame(offset)
-      .then((res) => {
-        setPuzzle(res.puzzle);
-        setBoard(res.board.map((g) => entryFrom(g, res.puzzle.weights)));
-        setStatus(res.status);
-        setRecipe(res.recipe);
-        setIsToday(res.isToday);
-        setCanGoBack(res.canGoBack);
-        setDateLabel(res.dateLabel);
-        setComposition([]);
-        setCopied(false);
-        setOverlayOpen(false);
-        setScreen(res.board.length ? "play" : "launch");
-        setReady(true);
-      })
-      .finally(() => setPending(false));
-  }, []);
-
-  // Load (or reload) whenever the day or the signed-in identity changes — a
-  // different subject has a different server-side game.
-  useEffect(() => {
-    // Synchronising React with the server-authoritative game state — a
-    // deliberate fetch on day / identity change, not a render cascade.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    applyLoad(dayOffset);
-  }, [dayOffset, userId, applyLoad]);
-
-  // Keep the signed-in player's competitive stats fresh for the results overlay.
-  const refreshStats = useCallback(() => {
-    if (!signedIn) {
-      setMyStats(null);
-      setAnonStats(loadStats());
-      return;
-    }
-    getMyStats().then(setMyStats);
-  }, [signedIn]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    refreshStats();
-  }, [refreshStats]);
-
   const addDose = useCallback((id: string) => {
-    const { status: st, composition: comp } = latest.current;
-    if (st !== "composing" || comp.length >= CELLS) return;
-    setComposition((c) => [...c, id]);
+    if (latest.current.status !== "composing") return;
+    setComposition((c) => (c.length >= CELLS ? c : [...c, id]));
   }, []);
 
   const removeDose = useCallback((i: number) => {
@@ -138,37 +167,18 @@ export function useNuance(): Nuance {
   }, []);
 
   const submit = useCallback(() => {
-    const { status: st, composition: comp, dayOffset: off, puzzle: pz, isToday: today } = latest.current;
-    if (st !== "composing" || comp.length !== CELLS || !pz || pending) return;
-    setPending(true);
-    const guess = comp.slice();
-    submitGuess(off, guess)
-      .then((res) => {
-        setBoard(res.board.map((g) => entryFrom(g, pz.weights)));
-        setStatus(res.status);
-        setRecipe(res.recipe);
-        setComposition([]);
-        const finished = res.status !== "composing";
-        setOverlayOpen(finished);
-        if (finished) {
-          if (signedIn) {
-            getMyStats().then(setMyStats);
-          } else if (today) {
-            // Anonymous: keep a local stats aggregate as a display nicety.
-            updateAnonStats(res.status === "won", res.board.length, Number(pz.num), setAnonStats);
-          }
-        }
-      })
-      .finally(() => setPending(false));
-  }, [pending, signedIn]);
+    const cur = latest.current;
+    if (cur.status !== "composing" || cur.composition.length !== CELLS || !cur.puzzle || cur.pending) return;
+    mutateGuess(cur.composition.slice());
+  }, [mutateGuess]);
 
+  // Day 0 is today; positive offsets go back in time — never below 0, so the
+  // player can never navigate into the future.
   const goToDay = useCallback((delta: number) => {
-    const newOffset = latest.current.dayOffset + delta;
-    if (newOffset < 0) return;
-    setDayOffset(newOffset);
+    setDayOffset((off) => Math.max(0, off + delta));
   }, []);
 
-  const startPlay = useCallback(() => setScreen("play"), []);
+  const startPlay = useCallback(() => setStarted(true), []);
   const prevDay = useCallback(() => goToDay(1), [goToDay]);
   const nextDay = useCallback(() => goToDay(-1), [goToDay]);
   const reopen = useCallback(() => setOverlayOpen(true), []);
@@ -205,15 +215,15 @@ export function useNuance(): Nuance {
   }, [addDose, removeDose, submit, startPlay]);
 
   return {
-    ready,
+    ready: !!data,
     screen,
     puzzle,
     composition,
     board,
     status,
-    finished: status !== "composing",
+    finished,
     pending,
-    isToday,
+    isToday: data?.isToday ?? true,
     recipe,
     overlayOpen,
     signedIn,
@@ -221,8 +231,8 @@ export function useNuance(): Nuance {
     anonStats,
     copied,
     dayOffset,
-    canGoBack,
-    dateLabel,
+    canGoBack: data?.canGoBack ?? false,
+    dateLabel: data?.dateLabel ?? "TODAY",
     addDose,
     removeDose,
     submit,
@@ -235,12 +245,9 @@ export function useNuance(): Nuance {
   };
 }
 
-function updateAnonStats(
-  won: boolean,
-  guesses: number,
-  dayNum: number,
-  set: (s: Stats) => void,
-) {
+// Compute (and persist) the next anonymous stats aggregate after a finished
+// game. Pure w.r.t. its inputs aside from the localStorage read/write.
+function nextAnonStats(won: boolean, guesses: number, dayNum: number): Stats {
   const prev = loadStats();
   const s: Stats = { ...prev, distribution: (prev.distribution || [0, 0, 0, 0, 0, 0]).slice() };
   s.played = (s.played || 0) + 1;
@@ -254,5 +261,5 @@ function updateAnonStats(
   }
   s.maxStreak = Math.max(s.maxStreak || 0, s.currentStreak || 0);
   saveStats(s);
-  set(s);
+  return s;
 }

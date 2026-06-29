@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db/client";
 import * as schema from "@/db/schema";
+import { env } from "@/env";
 
 // The origin better-auth signs cookies and builds OAuth callback URLs against.
 // better-auth itself only reads BETTER_AUTH_URL, so we resolve Vercel's system
@@ -11,21 +12,18 @@ import * as schema from "@/db/schema";
 // the per-deployment URL on preview builds. Returns undefined elsewhere so
 // better-auth falls back to inferring the origin from the request.
 function resolveBaseURL(): string | undefined {
-  if (process.env.BETTER_AUTH_URL) return process.env.BETTER_AUTH_URL;
-  if (process.env.VERCEL_ENV === "production" && process.env.VERCEL_PROJECT_PRODUCTION_URL) {
-    return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+  if (env.BETTER_AUTH_URL) return env.BETTER_AUTH_URL;
+  if (env.VERCEL_ENV === "production" && env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return `https://${env.VERCEL_PROJECT_PRODUCTION_URL}`;
   }
-  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  if (env.VERCEL_URL) return `https://${env.VERCEL_URL}`;
   return undefined;
 }
 
 // Trust the Vercel origins this app can be reached on (preview + production) so
 // cross-origin auth requests aren't rejected when baseURL is the canonical
 // production domain but the app is opened on a preview deployment URL.
-const trustedOrigins = [
-  process.env.VERCEL_PROJECT_PRODUCTION_URL,
-  process.env.VERCEL_URL,
-]
+const trustedOrigins = [env.VERCEL_PROJECT_PRODUCTION_URL, env.VERCEL_URL]
   .filter((host): host is string => !!host)
   .map((host) => `https://${host}`);
 
@@ -40,8 +38,8 @@ export const auth = betterAuth({
   },
   socialProviders: {
     discord: {
-      clientId: process.env.DISCORD_CLIENT_ID ?? "",
-      clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
+      clientId: env.DISCORD_CLIENT_ID ?? "",
+      clientSecret: env.DISCORD_CLIENT_SECRET ?? "",
     },
   },
 });

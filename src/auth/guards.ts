@@ -2,6 +2,7 @@ import "server-only";
 import { cookies, headers } from "next/headers";
 import type { NextRequest } from "next/server";
 import { auth } from "@/auth/auth";
+import { env } from "@/env";
 
 // Next.js 16 renamed `middleware` to `proxy`, and its docs explicitly
 // discourage using proxy as an auth/session layer (it runs at the network
@@ -41,7 +42,7 @@ export async function resolveSubject(): Promise<Subject> {
     jar.set(ANON_COOKIE, anon, {
       httpOnly: true,
       sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
+      secure: env.NODE_ENV === "production",
       path: "/",
       maxAge: ANON_COOKIE_MAX_AGE,
     });

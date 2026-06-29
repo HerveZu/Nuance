@@ -8,6 +8,17 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 This is a **pnpm** project (`pnpm-lock.yaml`). Use `pnpm` for installs and scripts — never `npm install` (it fights pnpm's `node_modules` layout and the lockfile).
 
+# Environment variables
+
+All env vars are declared and validated in **`src/env.ts`** (via
+`@t3-oss/env-nextjs` + Zod). **Never read `process.env` directly** in app code —
+import `env` from `@/env` instead, so a missing/malformed var fails loudly at
+startup with a typed value at every call site. Adding a new var means adding it
+to the schema in `src/env.ts` first (server vs. `NEXT_PUBLIC_*` client). The
+only exception is `drizzle.config.ts`, which runs outside the Next.js runtime
+(its env is loaded by dotenv after imports are hoisted) and reads `process.env`
+directly.
+
 # Data fetching: use TanStack Query
 
 All server/async state in client components goes through **TanStack Query**
@@ -25,7 +36,7 @@ dependency change should be a new query key, not a manual reload.
 - Genuine UI state (form inputs, open/closed, which screen) stays local
   `useState` — TanStack Query is for *server* state only.
 
-`useNuance` (`src/hooks/useNuance.ts`) is the reference pattern.
+`useNuance` (`src/game/useNuance.ts`) is the reference pattern.
 
 # Reusability
 
@@ -35,6 +46,21 @@ primitive already covers it (`src/components/ui/*`, theme tokens in
 `globals.css`, `src/lib/*`) and extend that instead. When the same pattern
 appears 2–3 times, extract it (a component, a theme token, a utility) rather
 than copy-pasting. Use theme variables instead of hard-coded values.
+
+# Dates & durations: use date-fns
+
+Reach for **date-fns** before writing any custom date or timing logic. Don't
+hand-roll calendar maths or epoch arithmetic (`new Date()` juggling,
+`d.getTime()` subtraction, `* 60 * 1000` magic numbers) — there's almost always
+a named helper (`differenceInCalendarDays`, `subDays`, `format`, …) that is
+clearer and handles month/DST edge cases for you.
+
+**Express every duration with `milliseconds()`** (or a sibling like `seconds()`/
+`hoursToMilliseconds()`) so the unit is explicit at the literal — write
+`milliseconds({ seconds: 1.8 })`, never a bare `1800`, and
+`milliseconds({ years: 1 })` instead of `60 * 60 * 24 * 365 * 1000`. When an API
+wants a different unit (e.g. cookie `max-age` is in seconds), convert from the
+millisecond value (`milliseconds({ years: 1 }) / 1000`) rather than recomputing.
 
 # Comments
 
@@ -69,6 +95,16 @@ in `src/game/`, not `src/hooks/`. Only put something in `components/ui` or
 `lib` when it is **truly generic** (used across features or a pure design-system
 primitive); if it serves one feature, colocate it there. Keep things that
 change together close together; within a file, order by feature flow.
+
+# Linting & formatting: Biome
+
+**Biome** is the single linter and formatter (there is no ESLint/Prettier). Run
+`pnpm lint` (`biome check`) before finishing; `pnpm lint:fix`
+(`biome check --write`) applies safe fixes and `pnpm format` formats. Config is
+`biome.json` (2-space indent, 100-col, double quotes, trailing commas). Match
+that style and keep `pnpm lint` green — if a rule is a genuine false positive,
+add a scoped `// biome-ignore <rule>: <reason>` rather than disabling it
+project-wide.
 
 # Commits
 

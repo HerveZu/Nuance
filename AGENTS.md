@@ -46,12 +46,29 @@ or narrate the diff. If the code already says it, delete the comment.
 
 # Code organization
 
-Group code by **feature / related logic**, not by technical concern. Keep the
-things that change together close together — a feature's component, its state,
-its types, and its helpers — instead of scattering them across "all types
-here / all hooks there" buckets. Within a file, order by feature flow rather
-than by kind. Shared primitives are the exception: genuinely cross-feature
-building blocks belong in the shared locations above.
+Organise the tree by **feature**, not by technical role. A feature owns its
+components, hooks, server logic, types and helpers in one folder:
+
+```
+src/
+  game/            # the puzzle: engine, daily, service (core), actions,
+    components/     #   useNuance, schemas, storage, keyboard, color + its UI
+  leaderboard/     # queries + view
+  auth/            # better-auth setup, client, guards, AuthControl/Dialog
+  db/              # drizzle client + schema
+  components/ui/   # ONLY genuinely cross-feature primitives (design system)
+  lib/             # ONLY truly generic helpers (cn, HTTP/CORS)
+  app/             # routing only (page/layout/route) — thin, imports features
+```
+
+Next.js requires routing files under `app/`, so keep those **thin** and have
+them import the feature (e.g. `app/leaderboard/page.tsx` re-exports
+`@/leaderboard/LeaderboardView`). Don't create technical-bucket folders like
+`hooks/`, `providers/`, `utils/`, `types/` for feature code — a game hook lives
+in `src/game/`, not `src/hooks/`. Only put something in `components/ui` or
+`lib` when it is **truly generic** (used across features or a pure design-system
+primitive); if it serves one feature, colocate it there. Keep things that
+change together close together; within a file, order by feature flow.
 
 # Commits
 

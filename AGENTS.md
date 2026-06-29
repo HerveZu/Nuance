@@ -19,7 +19,7 @@ only exception is `drizzle.config.ts`, which runs outside the Next.js runtime
 (its env is loaded by dotenv after imports are hoisted) and reads `process.env`
 directly.
 
-# Data fetching: use TanStack Query
+# Async state: use TanStack Query
 
 All server/async state in client components goes through **TanStack Query**
 (`@tanstack/react-query`) — `useQuery` for reads, `useMutation` for writes,
@@ -33,8 +33,14 @@ dependency change should be a new query key, not a manual reload.
 - Writes: `useMutation`. When the server returns the new state, `setQueryData`
   it into the cache; otherwise `invalidateQueries`.
 - Server actions and the HTTP API are fine as the `queryFn`/`mutationFn` body.
-- Genuine UI state (form inputs, open/closed, which screen) stays local
-  `useState` — TanStack Query is for *server* state only.
+- **Not just data fetching.** Reach for `useQuery`/`useMutation` for *any* async
+  operation whose lifecycle you'd otherwise track by hand — anything that
+  benefits from `isPending`, `error`/`onError`, `onSuccess`/`onSettled`, retries
+  or in-flight de-duping. The operation needn't be a network request (a
+  clipboard write, a Web Share call, an async storage write all qualify); the
+  win is the managed pending/error/success state, not the fetch.
+- Genuine *synchronous* UI state (form inputs, open/closed, which screen) stays
+  local `useState` — TanStack Query is for async work, not view state.
 
 `useNuance` (`src/game/useNuance.ts`) is the reference pattern.
 

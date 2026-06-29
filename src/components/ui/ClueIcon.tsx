@@ -1,12 +1,10 @@
-import { Check, ArrowLeftRight } from "lucide-react";
 import type { Clue } from "@/lib/engine";
+import { CLUE_META, hasClueIcon } from "./clue";
 
-export function hasClueIcon(clue: Clue): boolean {
-  return clue === "green" || clue === "yellow";
-}
+export { hasClueIcon };
 
 export function ClueIcon({ clue, color, size }: { clue: Clue; color: string; size: number }) {
-  if (clue === "green") return <Check size={size} strokeWidth={3} color={color} aria-label="Right pigment and cell" />;
-  if (clue === "yellow") return <ArrowLeftRight size={size} strokeWidth={3} color={color} aria-label="Right pigment, wrong cell" />;
-  return null;
+  if (!hasClueIcon(clue)) return null;
+  const { Icon, label } = CLUE_META[clue];
+  return <Icon size={size} strokeWidth={3} color={color} aria-label={label} />;
 }

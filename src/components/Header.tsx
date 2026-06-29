@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GhostButton } from "./ui/buttons";
+import { PageHeading } from "./ui/PageHeading";
 import { AuthControl } from "./AuthControl";
 
 interface HeaderProps {
@@ -16,17 +17,13 @@ interface HeaderProps {
 export function Header({ num, dateLabel, isToday, canGoBack, finished, onPrev, onNext, onReopen }: HeaderProps) {
   return (
     <div className="flex items-end justify-between gap-x-6 gap-y-3 flex-wrap pb-2 mb-3 md:pb-3 md:mb-5 shrink-0">
-      <div className="flex items-baseline gap-3.5 flex-wrap">
-        <div className="font-display font-bold text-3xl tracking-[-0.03em]">
-          NUANCE<span className="text-sub">.day</span>
-        </div>
-        <div className="font-mono text-base text-sub tracking-[0.06em]">
-          #{num} · {dateLabel}
-        </div>
-      </div>
+      <PageHeading
+        title={<>NUANCE<span className="text-sub">.day</span></>}
+        caption={<>#{num} · {dateLabel}</>}
+      />
       <div className="flex gap-2 items-center">
         {finished && (
-          <GhostButton onClick={onReopen} className="text-sm tracking-[0.08em] uppercase px-3.5 py-[9px]">
+          <GhostButton onClick={onReopen} size="pill">
             Results
           </GhostButton>
         )}
@@ -34,7 +31,8 @@ export function Header({ num, dateLabel, isToday, canGoBack, finished, onPrev, o
           onClick={onPrev}
           disabled={!canGoBack}
           title="Previous day"
-          className="text-md w-[38px] h-[38px] flex items-center justify-center disabled:opacity-[0.35]"
+          size="icon"
+          className="text-md disabled:opacity-[0.35]"
         >
           <ChevronLeft size={18} aria-label="Previous day" />
         </GhostButton>
@@ -42,7 +40,8 @@ export function Header({ num, dateLabel, isToday, canGoBack, finished, onPrev, o
           onClick={onNext}
           disabled={isToday}
           title="Next day"
-          className="text-md w-[38px] h-[38px] flex items-center justify-center disabled:opacity-[0.35]"
+          size="icon"
+          className="text-md disabled:opacity-[0.35]"
         >
           <ChevronRight size={18} aria-label="Next day" />
         </GhostButton>

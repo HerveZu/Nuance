@@ -62,7 +62,7 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           Continue with Discord
         </Button>
 
-        <div className="flex items-center gap-3 text-2xs font-mono text-sub uppercase tracking-[0.1em]">
+        <div className="flex items-center gap-3 text-label text-sub">
           <span className="h-px flex-1 bg-line" /> or <span className="h-px flex-1 bg-line" />
         </div>
 

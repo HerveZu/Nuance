@@ -14,6 +14,7 @@ import { ClueLegend } from "./ClueLegend";
 import { SectionLabel } from "./ui/SectionLabel";
 import { hasClueIcon } from "./ui/ClueIcon";
 import { PrimaryButton } from "./ui/buttons";
+import { Swatch } from "./ui/Swatch";
 import { PaletteChip } from "./PaletteChip";
 import { GuessRow, type RowCell } from "./GuessRow";
 
@@ -64,7 +65,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
       const trailing = (
         <>
           <span className="font-display font-bold text-md md:text-lg tabular-nums whitespace-nowrap">{b.fb.matchPercent}%</span>
-          <div className="w-8 md:w-10 self-stretch md:h-[42px] border border-line rounded-card shrink-0" style={{ background: rgbToCss(b.fb.rgb) }} />
+          <Swatch css={rgbToCss(b.fb.rgb)} className="w-8 md:w-10 self-stretch md:h-row shrink-0" />
         </>
       );
       return <GuessRow key={i} cells={cells} trailing={trailing} />;
@@ -89,7 +90,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
           onClick={submit}
           disabled={!canGuess}
           style={{ opacity: canGuess ? 1 : 0.4 }}
-          className="w-full h-full md:h-[42px] inline-flex items-center justify-center text-2xs md:text-sm tracking-[0.06em] px-1"
+          className="w-full h-full md:h-row inline-flex items-center justify-center text-2xs md:text-sm tracking-caption px-1"
         >
           Guess
         </PrimaryButton>
@@ -106,10 +107,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
       <ClueLegend className="flex flex-row items-center gap-x-6 gap-y-2 flex-wrap" />
       <div className="flex items-center gap-3 shrink-0">
         <SectionLabel>TARGET</SectionLabel>
-        <div
-          className="w-[170px] h-[52px] border border-line rounded-card shadow-overlay"
-          style={{ background: rgbToCss(puzzle.target) }}
-        />
+        <Swatch css={rgbToCss(puzzle.target)} className="w-[170px] h-[52px] shadow-overlay" />
       </div>
     </div>
   );
@@ -117,7 +115,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
   const mobileTargetBand = (
     <div className="flex items-center gap-3 md:hidden">
       <SectionLabel className="shrink-0">TARGET</SectionLabel>
-      <div className="h-9 flex-1 border border-line rounded-card" style={{ background: rgbToCss(puzzle.target) }} />
+      <Swatch css={rgbToCss(puzzle.target)} className="h-9 flex-1" />
     </div>
   );
 

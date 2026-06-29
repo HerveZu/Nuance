@@ -16,6 +16,9 @@ import type { MyStats } from "@/app/actions";
 import { rgbToCss } from "@/lib/color";
 import { X, Check, Trophy } from "lucide-react";
 import { SectionLabel } from "./ui/SectionLabel";
+import { Surface } from "./ui/Surface";
+import { Swatch } from "./ui/Swatch";
+import { CLUE_META } from "./ui/clue";
 import { PrimaryButton, GhostButton } from "./ui/buttons";
 import { AuthDialog } from "./AuthDialog";
 
@@ -37,7 +40,7 @@ function Stat({ value, label }: { value: number | string; label: string }) {
   return (
     <div className="flex-1 text-center border border-line rounded-card py-3 px-1.5">
       <div className="font-bold text-xl">{value}</div>
-      <div className="font-mono text-2xs text-sub tracking-[0.06em] mt-[3px]">{label}</div>
+      <div className="text-meta tracking-caption mt-[3px]">{label}</div>
     </div>
   );
 }
@@ -79,8 +82,8 @@ export function ResultsOverlay({
   })();
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center p-5 z-50" style={{ background: "rgba(22,19,15,0.55)" }}>
-      <div className="bg-surface border border-line rounded-card shadow-overlay max-w-[440px] w-full px-7 pt-[26px] pb-7 max-h-[92vh] overflow-auto">
+    <div className="fixed inset-0 flex items-center justify-center p-5 z-50 bg-scrim">
+      <Surface className="shadow-overlay max-w-[440px] w-full px-7 pt-[26px] pb-7 max-h-[92vh] overflow-auto">
         <div className="flex justify-between items-start">
           <div>
             <div className="font-display font-bold text-2xl leading-[1.05] tracking-[-0.01em]">
@@ -101,8 +104,8 @@ export function ResultsOverlay({
         <div className="flex gap-1.5">
           {recipe.map((id, i) => (
             <div key={i} style={{ flexGrow: puzzle.weights[i], flexBasis: 0 }}>
-              <div className="h-12 border border-line rounded-card" style={{ background: rgbToCss(pureMix(id)) }} />
-              <div className="font-mono text-2xs text-sub text-center mt-1">{getPigment(id).code.split("-")[0]}</div>
+              <Swatch css={rgbToCss(pureMix(id))} className="h-12" />
+              <div className="text-meta text-center mt-1">{getPigment(id).code.split("-")[0]}</div>
             </div>
           ))}
         </div>
@@ -125,10 +128,10 @@ export function ResultsOverlay({
                 <div className="font-mono text-xs mb-[3px]">{matched}</div>
                 <div className="w-full flex flex-col rounded-card overflow-hidden">
                   {yellows > 0 && (
-                    <div style={{ height: yellows * CELL_UNIT, background: "var(--color-clue-yellow)" }} />
+                    <div style={{ height: yellows * CELL_UNIT, background: CLUE_META.yellow.colorVar }} />
                   )}
                   {greens > 0 && (
-                    <div style={{ height: greens * CELL_UNIT, background: "var(--color-clue-green)" }} />
+                    <div style={{ height: greens * CELL_UNIT, background: CLUE_META.green.colorVar }} />
                   )}
                   {matched === 0 && <div className="h-[3px] bg-line" />}
                 </div>
@@ -141,7 +144,7 @@ export function ResultsOverlay({
         {!signedIn && (
           <div className="bg-ground border border-line rounded-card py-3.5 px-4 mt-6">
             <p className="font-mono text-md text-sub mb-2.5">Sign in to compete on the global leaderboard and keep your streak.</p>
-            <PrimaryButton onClick={() => setAuthOpen(true)} className="w-full inline-flex items-center justify-center text-md tracking-[0.1em] py-2.5">
+            <PrimaryButton onClick={() => setAuthOpen(true)} className="w-full inline-flex items-center justify-center text-md tracking-label py-2.5">
               Sign in
             </PrimaryButton>
           </div>
@@ -151,16 +154,16 @@ export function ResultsOverlay({
           {shareText}
         </div>
         <div className="flex gap-2">
-          <PrimaryButton onClick={() => onShare(shareText)} className="flex-1 inline-flex items-center justify-center gap-1.5 text-md tracking-[0.1em] py-[15px]">
+          <PrimaryButton onClick={() => onShare(shareText)} className="flex-1 inline-flex items-center justify-center gap-1.5 text-md tracking-label py-[15px]">
             {copied ? (<><Check size={15} /> COPIED</>) : "SHARE RESULT"}
           </PrimaryButton>
           <Link href="/leaderboard" className="shrink-0">
-            <GhostButton className="h-full inline-flex items-center justify-center gap-1.5 text-md tracking-[0.08em] uppercase px-4">
+            <GhostButton className="h-full inline-flex items-center justify-center gap-1.5 text-md tracking-wide uppercase px-4">
               <Trophy size={15} /> Board
             </GhostButton>
           </Link>
         </div>
-      </div>
+      </Surface>
 
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
     </div>

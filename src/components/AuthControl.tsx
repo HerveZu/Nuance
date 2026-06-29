@@ -4,9 +4,10 @@ import { useState } from "react";
 import Link from "next/link";
 import { Trophy, LogOut } from "lucide-react";
 import { useSession, signOut } from "@/lib/auth-client";
+import { cn } from "@/lib/utils";
 import { AuthDialog } from "./AuthDialog";
-import { GhostButton } from "./ui/buttons";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { GhostButton, gameButtonVariants } from "./ui/buttons";
+import { PlayerAvatar } from "@/components/ui/PlayerAvatar";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -25,7 +26,7 @@ export function AuthControl() {
       <Link
         href="/leaderboard"
         title="Leaderboard"
-        className="font-mono border border-line rounded-card bg-transparent text-ink w-[38px] h-[38px] flex items-center justify-center hover:bg-surface"
+        className={cn(gameButtonVariants({ variant: "ghost", size: "icon" }), "hover:bg-surface")}
       >
         <Trophy size={16} aria-label="Leaderboard" />
       </Link>
@@ -33,12 +34,12 @@ export function AuthControl() {
       {isPending ? null : user ? (
         <DropdownMenu>
           <DropdownMenuTrigger className="cursor-pointer rounded-full outline-none" aria-label="Account">
-            <Avatar className="h-[38px] w-[38px] border border-line">
-              {user.image && <AvatarImage src={user.image} alt={user.name ?? "you"} />}
-              <AvatarFallback className="bg-surface text-ink font-mono text-sm uppercase">
-                {(user.name ?? user.email ?? "?").slice(0, 2)}
-              </AvatarFallback>
-            </Avatar>
+            <PlayerAvatar
+              name={user.name ?? user.email}
+              image={user.image}
+              className="size-control"
+              fallbackClassName="bg-surface text-sm"
+            />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <div className="px-2 py-1.5 text-sm font-medium max-w-[200px] truncate">{user.name ?? user.email}</div>
@@ -49,10 +50,7 @@ export function AuthControl() {
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <GhostButton
-          onClick={() => setAuthOpen(true)}
-          className="text-sm tracking-[0.08em] uppercase px-3.5 py-[9px]"
-        >
+        <GhostButton onClick={() => setAuthOpen(true)} size="pill">
           Sign in
         </GhostButton>
       )}

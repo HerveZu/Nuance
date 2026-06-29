@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import { getPigment, pureMix, type PublicPuzzle } from "@/lib/engine";
 import { rgbToCss } from "@/lib/color";
 import { PrimaryButton } from "./ui/buttons";
+import { Surface } from "./ui/Surface";
 
 export function LaunchScreen({ puzzle, onPlay }: { puzzle: PublicPuzzle; onPlay: () => void }) {
   return (
@@ -15,19 +16,19 @@ export function LaunchScreen({ puzzle, onPlay }: { puzzle: PublicPuzzle; onPlay:
         {puzzle.palette.map((id) => {
           const p = getPigment(id);
           return (
-            <div key={id} className="w-[72px] border border-line rounded-card overflow-hidden bg-surface">
-              <div className="h-[42px]" style={{ background: rgbToCss(pureMix(id)) }} />
+            <Surface key={id} className="w-[72px] overflow-hidden">
+              <div className="h-row" style={{ background: rgbToCss(pureMix(id)) }} />
               <div className="px-1.5 py-1 text-left">
                 <div className="font-medium text-2xs leading-[1.15] whitespace-nowrap overflow-hidden text-ellipsis">
                   {p.name}
                 </div>
-                <div className="font-mono text-2xs text-sub mt-px">{p.code}</div>
+                <div className="text-meta mt-px">{p.code}</div>
               </div>
-            </div>
+            </Surface>
           );
         })}
       </div>
-      <PrimaryButton onClick={onPlay} className="mx-auto inline-flex items-center gap-2 text-md tracking-[0.1em] px-[30px] py-3.5">
+      <PrimaryButton onClick={onPlay} className="mx-auto inline-flex items-center gap-2 text-md tracking-label px-[30px] py-3.5">
         Start mixing <ArrowRight size={16} />
       </PrimaryButton>
     </div>

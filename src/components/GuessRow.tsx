@@ -22,7 +22,7 @@ interface GuessRowProps {
 export function GuessRow({ cells, trailing, active, dimmed, onCellClick }: GuessRowProps) {
   return (
     <div
-      className="flex gap-1.5 items-stretch md:items-center h-9 md:h-[42px] shrink-0 md:mb-[7px]"
+      className="flex gap-1.5 items-stretch md:items-center h-9 md:h-row shrink-0 md:mb-[7px]"
       style={{ opacity: dimmed ? 0.45 : 1 }}
     >
       {cells.map((cell, i) => {
@@ -32,7 +32,7 @@ export function GuessRow({ cells, trailing, active, dimmed, onCellClick }: Guess
             : "border border-dashed border-sub"
           : "border border-line";
         const clickable = active && !cell.placeholder && !!onCellClick;
-        const common = `h-full md:h-[42px] min-h-0 rounded-card overflow-hidden flex items-center justify-center ${border}`;
+        const common = `h-full md:h-row min-h-0 rounded-card overflow-hidden flex items-center justify-center ${border}`;
         const style = { background: cell.css, flexGrow: cell.weight, flexBasis: 0 } as React.CSSProperties;
         const content = cell.label ? (
           <span className="font-mono text-2xs font-bold" style={{ color: cell.textColor }}>

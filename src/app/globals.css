@@ -12,9 +12,17 @@
   --color-line: #322e3c;
   --color-clue-green: #6aaa64;
   --color-clue-yellow: #c9b458;
+  --color-clue-fg: #ffffff;
+  --color-scrim: rgba(22, 19, 15, 0.55);
+  --color-veil: rgba(0, 0, 0, 0.55);
 
   --radius-card: 10px;
   --shadow-overlay: 0 16px 44px rgba(0, 0, 0, 0.55);
+
+  /* Repeated layout sizes: the square nav/icon control and the board-row /
+     swatch height. Exposed as spacing tokens (size-control, h-row, …). */
+  --spacing-control: 38px;
+  --spacing-row: 42px;
 
   --text-2xs: 9px;
   --text-xs: 10px;
@@ -31,6 +39,22 @@
   --font-display: var(--font-bricolage), "Bricolage Grotesque", sans-serif;
   --font-ui: var(--font-grotesk), "Space Grotesk", sans-serif;
   --font-mono: var(--font-mono), "Space Mono", monospace;
+
+  /* The recurring letter-spacings, named by role (→ tracking-caption, etc.). */
+  --tracking-caption: 0.06em;
+  --tracking-wide: 0.08em;
+  --tracking-label: 0.1em;
+  --tracking-section: 0.18em;
+}
+
+/* Composite mono text styles shared across the app. `text-label` is the small
+   uppercase header/label (table headers, dividers); `text-meta` is the muted
+   caption used for pigment codes and fine print. */
+@utility text-label {
+  @apply font-mono text-2xs uppercase tracking-label;
+}
+@utility text-meta {
+  @apply font-mono text-2xs text-sub;
 }
 
 @layer base {

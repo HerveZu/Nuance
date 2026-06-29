@@ -15,7 +15,6 @@ export default function Game() {
     <div className="min-h-screen bg-ground text-ink font-ui p-5 pb-8 flex flex-col">
       <div className="max-w-235 mx-auto w-full flex flex-1 flex-col">
         <Header
-          num={n.puzzle.num}
           dateLabel={n.dateLabel}
           isToday={n.isToday}
           canGoBack={n.canGoBack}

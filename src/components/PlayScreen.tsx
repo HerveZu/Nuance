@@ -80,7 +80,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
           style={{ background: rgbToCss(puzzle.target) }}
         />
       </div>
-      <div>
+      <div className="hidden md:block">
         <div className="flex items-baseline justify-between">
           <SectionLabel>BEST MATCH</SectionLabel>
           <div className="font-display font-bold text-4xl leading-[0.9]">
@@ -94,7 +94,9 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
           />
         </div>
       </div>
-      <ClueLegend />
+      <div className="hidden md:block">
+        <ClueLegend />
+      </div>
     </div>
   );
 
@@ -175,6 +177,9 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
           {rows.map((row, i) => (
             <GuessRow key={i} {...row} />
           ))}
+          <div className="md:hidden mt-4">
+            <ClueLegend />
+          </div>
         </div>
         <div className="order-1 md:order-none">{targetBand}</div>
       </div>

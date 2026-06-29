@@ -107,7 +107,11 @@ export async function submitGuess(offset: number, composition: string[]): Promis
   const safeOffset = Math.max(0, Math.floor(offset) || 0);
   const puzzle = getServerPuzzle(safeOffset);
   const day = Number(puzzle.num);
-  const isToday = safeOffset === 0 && day === serverDayNumber();
+  // Only the current daily puzzle counts on the leaderboard, and the server
+  // clock is the sole authority for which day that is — the client's offset
+  // cannot make a past (or future) puzzle score. Past days are still graded
+  // and saved for free play; they just never touch user_stats.
+  const isScored = day === serverDayNumber();
   const subject = await resolveSubject();
 
   // Validate the submission against the (public) palette before touching the DB.
@@ -159,9 +163,10 @@ export async function submitGuess(offset: number, composition: string[]): Promis
       })
       .where(eq(playSession.id, row.id));
 
-    // Record competitive stats only for signed-in players, only for today,
-    // only once (the composing→finished transition), all inside this tx.
-    if (finished && isToday && subject.type === "user") {
+    // Record competitive stats only for signed-in players, only for the
+    // server's current daily puzzle, only once (the composing→finished
+    // transition), all inside this tx.
+    if (finished && isScored && subject.type === "user") {
       await recordStats(tx, subject.id, day, newStatus === "won", guesses.length);
     }
 

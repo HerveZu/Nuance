@@ -12,9 +12,10 @@ export default function Game() {
   if (!n.ready) return <div className="min-h-screen bg-ground" />;
 
   return (
-    <div className="min-h-screen bg-ground text-ink font-ui p-5 pb-8 flex flex-col">
-      <div className="max-w-235 mx-auto w-full flex flex-1 flex-col">
+    <div className="h-[100svh] md:h-auto md:min-h-screen overflow-hidden md:overflow-visible bg-ground text-ink font-ui p-4 md:p-5 md:pb-8 flex flex-col">
+      <div className="max-w-235 mx-auto w-full flex flex-1 min-h-0 flex-col">
         <Header
+          num={n.puzzle.num}
           dateLabel={n.dateLabel}
           isToday={n.isToday}
           canGoBack={n.canGoBack}
@@ -24,7 +25,7 @@ export default function Game() {
           onReopen={n.reopen}
         />
 
-        <div className="flex flex-1 flex-col justify-center">
+        <div className="flex flex-1 min-h-0 flex-col md:justify-center">
           {n.screen === "launch" && <LaunchScreen puzzle={n.puzzle} onPlay={n.startPlay} />}
 
           {n.screen === "play" && (

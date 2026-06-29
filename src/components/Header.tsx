@@ -2,6 +2,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { GhostButton } from "./ui/buttons";
 
 interface HeaderProps {
+  num: number | string;
   dateLabel: string;
   isToday: boolean;
   canGoBack: boolean;
@@ -11,15 +12,15 @@ interface HeaderProps {
   onReopen: () => void;
 }
 
-export function Header({ dateLabel, isToday, canGoBack, finished, onPrev, onNext, onReopen }: HeaderProps) {
+export function Header({ num, dateLabel, isToday, canGoBack, finished, onPrev, onNext, onReopen }: HeaderProps) {
   return (
-    <div className="flex items-end justify-between gap-x-6 gap-y-3 flex-wrap pb-3 mb-5">
+    <div className="flex items-end justify-between gap-x-6 gap-y-3 flex-wrap pb-2 mb-3 md:pb-3 md:mb-5 shrink-0">
       <div className="flex items-baseline gap-3.5 flex-wrap">
         <div className="font-display font-bold text-3xl tracking-[-0.03em]">
           NUANCE<span className="text-sub">.day</span>
         </div>
         <div className="font-mono text-base text-sub tracking-[0.06em]">
-          {dateLabel}
+          #{num} · {dateLabel}
         </div>
       </div>
       <div className="flex gap-2 items-center">

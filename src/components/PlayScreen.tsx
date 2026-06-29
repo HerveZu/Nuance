@@ -29,8 +29,6 @@ interface PlayScreenProps {
 
 export function PlayScreen({ puzzle, composition, board, finished, addDose, removeDose, submit }: PlayScreenProps) {
   const keyLabels = useKeyLabels();
-  const best = board.length ? Math.max(...board.map((b) => b.fb.matchPercent)) : 0;
-  const gaugeFill = `hsl(${Math.round(best * 1.2)},62%,46%)`;
   const compFull = composition.length >= CELLS;
   const canGuess = composition.length === CELLS && !finished;
   const weights = puzzle.weights;
@@ -53,98 +51,79 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
     });
   });
 
-  const rows = Array.from({ length: GUESSES }, (_, i): { filled: boolean; swatchCss: string; cells: RowCell[]; pctText: string } => {
+  const activeIndex = finished ? -1 : board.length;
+
+  const rowEls = Array.from({ length: GUESSES }, (_, i) => {
     const b = board[i];
-    if (!b) {
-      return {
-        filled: false,
-        swatchCss: "transparent",
-        cells: weights.map((w) => ({ css: "transparent", clue: "none" as Clue, iconColor: "transparent", weight: w })),
-        pctText: "",
-      };
+    if (b) {
+      const cells: RowCell[] = b.recipe.map((id, idx) => {
+        const rgb = pureMix(id);
+        const clue = b.fb.clues[idx];
+        return { css: rgbToCss(rgb), clue, iconColor: hasClueIcon(clue) ? fgFor(rgb) : "transparent", weight: weights[idx] };
+      });
+      const trailing = (
+        <>
+          <span className="font-display font-bold text-md md:text-lg tabular-nums whitespace-nowrap">{b.fb.matchPercent}%</span>
+          <div className="w-8 md:w-10 self-stretch md:h-[42px] border border-line rounded-card shrink-0" style={{ background: rgbToCss(b.fb.rgb) }} />
+        </>
+      );
+      return <GuessRow key={i} cells={cells} trailing={trailing} />;
     }
-    const cells = b.recipe.map((id, idx) => {
-      const rgb = pureMix(id);
-      const clue = b.fb.clues[idx];
-      return { css: rgbToCss(rgb), clue, iconColor: hasClueIcon(clue) ? fgFor(rgb) : "transparent", weight: weights[idx] };
-    });
-    return { filled: true, swatchCss: rgbToCss(b.fb.rgb), cells, pctText: b.fb.matchPercent + "%" };
+
+    if (i === activeIndex) {
+      const cells: RowCell[] = weights.map((w, idx) => {
+        const id = composition[idx];
+        if (!id) return { css: "transparent", clue: "none" as Clue, iconColor: "transparent", weight: w, placeholder: true, label: "×" + w, textColor: "var(--color-sub)" };
+        const rgb = pureMix(id);
+        return {
+          css: rgbToCss(rgb),
+          clue: "none" as Clue,
+          iconColor: "transparent",
+          weight: w,
+          label: getPigment(id).code.split("-")[0],
+          textColor: fgFor(rgb),
+        };
+      });
+      const trailing = (
+        <PrimaryButton
+          onClick={submit}
+          disabled={!canGuess}
+          style={{ opacity: canGuess ? 1 : 0.4 }}
+          className="w-full h-full md:h-[42px] inline-flex items-center justify-center text-2xs md:text-sm tracking-[0.06em] px-1"
+        >
+          Guess
+        </PrimaryButton>
+      );
+      return <GuessRow key={i} cells={cells} trailing={trailing} active onCellClick={removeDose} />;
+    }
+
+    const cells: RowCell[] = weights.map((w) => ({ css: "transparent", clue: "none" as Clue, iconColor: "transparent", weight: w, placeholder: true }));
+    return <GuessRow key={i} cells={cells} dimmed />;
   });
 
-  const targetBand = (
-    <div className="flex flex-col gap-3 md:gap-5">
-      <div>
-        <SectionLabel className="mb-2">TARGET</SectionLabel>
+  const desktopTargetSection = (
+    <div className="flex items-end justify-between gap-8">
+      <ClueLegend className="flex flex-row items-center gap-x-6 gap-y-2 flex-wrap" />
+      <div className="flex items-center gap-3 shrink-0">
+        <SectionLabel>TARGET</SectionLabel>
         <div
-          className="border border-line rounded-card md:shadow-overlay h-11 md:h-[104px]"
+          className="w-[170px] h-[52px] border border-line rounded-card shadow-overlay"
           style={{ background: rgbToCss(puzzle.target) }}
         />
-      </div>
-      <div className="hidden md:block">
-        <div className="flex items-baseline justify-between">
-          <SectionLabel>BEST MATCH</SectionLabel>
-          <div className="font-display font-bold text-4xl leading-[0.9]">
-            {board.length ? best + "%" : "—"}
-          </div>
-        </div>
-        <div className="h-3 border border-line rounded-card mt-2 bg-surface overflow-hidden">
-          <div
-            className="h-full transition-[width] duration-[550ms] ease-[cubic-bezier(.2,.7,.2,1)]"
-            style={{ width: (board.length ? best : 0) + "%", background: gaugeFill }}
-          />
-        </div>
-      </div>
-      <div className="hidden md:block">
-        <ClueLegend />
       </div>
     </div>
   );
 
-  const inputCells = (
-    <div className="flex gap-3 items-start flex-wrap">
-      <div className="flex gap-[7px] flex-1 max-w-[360px]">
-        {weights.map((w, i) => {
-          const id = composition[i];
-          return (
-            <div key={i} className="flex flex-col" style={{ flexGrow: w, flexBasis: 0 }}>
-              {id ? (
-                <button
-                  onClick={() => removeDose(i)}
-                  disabled={finished}
-                  className="h-10 w-full border border-line rounded-card p-0 font-mono text-2xs font-bold cursor-pointer disabled:cursor-default overflow-hidden"
-                  style={{ background: rgbToCss(pureMix(id)), color: fgFor(pureMix(id)) }}
-                >
-                  {getPigment(id).code.split("-")[0]}
-                </button>
-              ) : (
-                <div className="h-10 w-full border border-dashed border-sub rounded-card" />
-              )}
-              <span className="font-mono text-2xs text-sub text-center mt-1">×{w}</span>
-            </div>
-          );
-        })}
-      </div>
-      <PrimaryButton
-        onClick={submit}
-        disabled={!canGuess}
-        style={{ opacity: canGuess ? 1 : 0.4 }}
-        className="ml-auto h-10 inline-flex items-center justify-center text-base tracking-[0.08em] px-5"
-      >
-        Guess · {composition.length}/{CELLS}
-      </PrimaryButton>
+  const mobileTargetBand = (
+    <div className="flex items-center gap-3 md:hidden">
+      <SectionLabel className="shrink-0">TARGET</SectionLabel>
+      <div className="h-9 flex-1 border border-line rounded-card" style={{ background: rgbToCss(puzzle.target) }} />
     </div>
   );
 
   const paletteBlock = (
     <div>
-      <div className="hidden md:flex justify-end mb-3">
-        <span className="font-mono text-xs text-sub inline-flex items-center gap-1.5">
-          press a key
-          <span className="inline-flex items-center gap-1">· <Delete size={12} strokeWidth={2} /> delete</span>
-          <span className="inline-flex items-center gap-1">· <CornerDownLeft size={12} strokeWidth={2} /> guess</span>
-        </span>
-      </div>
-      <div className="flex gap-[9px] flex-wrap justify-center">
+      <div className="flex gap-2 md:gap-[9px] flex-wrap justify-center">
         {puzzle.palette.map((id, i) => {
           const p = getPigment(id);
           const rgb = pureMix(id);
@@ -167,26 +146,30 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
           );
         })}
       </div>
+      <div className="hidden md:flex justify-center mt-4">
+        <span className="font-mono text-xs text-sub inline-flex items-center gap-1.5">
+          press a key
+          <span className="inline-flex items-center gap-1">· <Delete size={12} strokeWidth={2} /> delete</span>
+          <span className="inline-flex items-center gap-1">· <CornerDownLeft size={12} strokeWidth={2} /> guess</span>
+        </span>
+      </div>
     </div>
   );
 
   return (
-    <div>
-      <div className="flex flex-col gap-6 md:grid md:gap-10 md:grid-cols-[minmax(0,1fr)_300px] mb-10 md:mb-12">
-        <div className="order-2 md:order-none">
-          {rows.map((row, i) => (
-            <GuessRow key={i} {...row} />
-          ))}
-          <div className="md:hidden mt-4">
-            <ClueLegend />
-          </div>
-        </div>
-        <div className="order-1 md:order-none">{targetBand}</div>
+    <div className="flex flex-col h-full min-h-0 justify-center md:block">
+      <div className="min-w-0 flex flex-col gap-2 md:block md:mb-8">
+        {rowEls}
       </div>
 
-      <div className="flex flex-col gap-9">
-        <div className="order-1 md:order-2">{inputCells}</div>
-        <div className="order-2 md:order-1">{paletteBlock}</div>
+      <div className="hidden md:block md:mb-8">{desktopTargetSection}</div>
+
+      <div className="flex flex-col gap-5 shrink-0 mt-12 md:mt-0 md:gap-0">
+        <div className="md:hidden">
+          <ClueLegend />
+        </div>
+        {mobileTargetBand}
+        {paletteBlock}
       </div>
     </div>
   );

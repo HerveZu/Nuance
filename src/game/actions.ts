@@ -1,13 +1,13 @@
 "use server";
 
-import { resolveSubject, getSessionUser } from "@/auth/guards";
+import { getSessionUser, resolveSubject } from "@/auth/guards";
 import {
-  loadGame as loadGameCore,
-  submitGuess as submitGuessCore,
   getUserStats,
   type LoadGameResult,
-  type SubmitGuessResult,
+  loadGame as loadGameCore,
   type MyStats,
+  type SubmitGuessResult,
+  submitGuess as submitGuessCore,
 } from "@/game/service";
 
 // First-party server actions for the web UI. They resolve the subject from the
@@ -16,18 +16,21 @@ import {
 // API uses. Signed-in players score on the leaderboard through this path.
 
 export type {
-  SerializedGuess,
   GameStatus,
   LoadGameResult,
-  SubmitGuessResult,
   MyStats,
+  SerializedGuess,
+  SubmitGuessResult,
 } from "@/game/service";
 
 export async function loadGame(offset: number): Promise<LoadGameResult> {
   return loadGameCore(await resolveSubject(), offset);
 }
 
-export async function submitGuess(offset: number, composition: string[]): Promise<SubmitGuessResult> {
+export async function submitGuess(
+  offset: number,
+  composition: string[],
+): Promise<SubmitGuessResult> {
   return submitGuessCore(await resolveSubject(), offset, composition);
 }
 

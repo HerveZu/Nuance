@@ -1,26 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { Check, Trophy, X } from "lucide-react";
 import Link from "next/link";
-import {
-  buildShareText,
-  getPigment,
-  pureMix,
-  recipeText,
-  GUESSES,
-  type BoardEntry,
-  type PublicPuzzle,
-  type Stats,
-} from "@/game/engine";
+import { useState } from "react";
+import { AuthDialog } from "@/auth/AuthDialog";
+import { GhostButton, PrimaryButton } from "@/components/ui/buttons";
+import { Surface } from "@/components/ui/Surface";
 import type { MyStats } from "@/game/actions";
 import { rgbToCss } from "@/game/color";
-import { X, Check, Trophy } from "lucide-react";
-import { SectionLabel } from "./SectionLabel";
-import { Surface } from "@/components/ui/Surface";
-import { Swatch } from "./Swatch";
+import {
+  type BoardEntry,
+  buildShareText,
+  GUESSES,
+  getPigment,
+  type PublicPuzzle,
+  pureMix,
+  recipeText,
+  type Stats,
+} from "@/game/engine";
 import { CLUE_META } from "./clue";
-import { PrimaryButton, GhostButton } from "@/components/ui/buttons";
-import { AuthDialog } from "@/auth/AuthDialog";
+import { SectionLabel } from "./SectionLabel";
+import { Swatch } from "./Swatch";
 
 interface ResultsOverlayProps {
   puzzle: PublicPuzzle;
@@ -64,7 +64,9 @@ export function ResultsOverlay({
 
   const stats = (() => {
     if (signedIn && myStats) {
-      const winPct = myStats.gamesPlayed ? Math.round((myStats.gamesWon / myStats.gamesPlayed) * 100) : 0;
+      const winPct = myStats.gamesPlayed
+        ? Math.round((myStats.gamesWon / myStats.gamesPlayed) * 100)
+        : 0;
       return [
         { value: myStats.gamesPlayed, label: "PLAYED" },
         { value: winPct, label: "WIN %" },
@@ -72,7 +74,9 @@ export function ResultsOverlay({
         { value: myStats.currentStreak, label: "STREAK" },
       ];
     }
-    const winPct = anonStats.played ? Math.round(((anonStats.wins || 0) / anonStats.played) * 100) : 0;
+    const winPct = anonStats.played
+      ? Math.round(((anonStats.wins || 0) / anonStats.played) * 100)
+      : 0;
     return [
       { value: anonStats.played || 0, label: "PLAYED" },
       { value: winPct, label: "WIN %" },
@@ -95,7 +99,12 @@ export function ResultsOverlay({
                 : "The target recipe is revealed below."}
             </div>
           </div>
-          <button onClick={onClose} aria-label="Close" className="border-none bg-transparent leading-none text-sub cursor-pointer px-1 py-0.5">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="border-none bg-transparent leading-none text-sub cursor-pointer px-1 py-0.5"
+          >
             <X size={22} />
           </button>
         </div>
@@ -128,10 +137,14 @@ export function ResultsOverlay({
                 <div className="font-mono text-xs mb-[3px]">{matched}</div>
                 <div className="w-full flex flex-col rounded-card overflow-hidden">
                   {yellows > 0 && (
-                    <div style={{ height: yellows * CELL_UNIT, background: CLUE_META.yellow.colorVar }} />
+                    <div
+                      style={{ height: yellows * CELL_UNIT, background: CLUE_META.yellow.colorVar }}
+                    />
                   )}
                   {greens > 0 && (
-                    <div style={{ height: greens * CELL_UNIT, background: CLUE_META.green.colorVar }} />
+                    <div
+                      style={{ height: greens * CELL_UNIT, background: CLUE_META.green.colorVar }}
+                    />
                   )}
                   {matched === 0 && <div className="h-[3px] bg-line" />}
                 </div>
@@ -143,8 +156,13 @@ export function ResultsOverlay({
 
         {!signedIn && (
           <div className="bg-ground border border-line rounded-card py-3.5 px-4 mt-6">
-            <p className="font-mono text-md text-sub mb-2.5">Sign in to compete on the global leaderboard and keep your streak.</p>
-            <PrimaryButton onClick={() => setAuthOpen(true)} className="w-full inline-flex items-center justify-center text-md tracking-label py-2.5">
+            <p className="font-mono text-md text-sub mb-2.5">
+              Sign in to compete on the global leaderboard and keep your streak.
+            </p>
+            <PrimaryButton
+              onClick={() => setAuthOpen(true)}
+              className="w-full inline-flex items-center justify-center text-md tracking-label py-2.5"
+            >
               Sign in
             </PrimaryButton>
           </div>
@@ -154,8 +172,17 @@ export function ResultsOverlay({
           {shareText}
         </div>
         <div className="flex gap-2">
-          <PrimaryButton onClick={() => onShare(shareText)} className="flex-1 inline-flex items-center justify-center gap-1.5 text-md tracking-label py-[15px]">
-            {copied ? (<><Check size={15} /> COPIED</>) : "SHARE RESULT"}
+          <PrimaryButton
+            onClick={() => onShare(shareText)}
+            className="flex-1 inline-flex items-center justify-center gap-1.5 text-md tracking-label py-[15px]"
+          >
+            {copied ? (
+              <>
+                <Check size={15} /> COPIED
+              </>
+            ) : (
+              "SHARE RESULT"
+            )}
           </PrimaryButton>
           <Link href="/leaderboard" className="shrink-0">
             <GhostButton className="h-full inline-flex items-center justify-center gap-1.5 text-md tracking-wide uppercase px-4">

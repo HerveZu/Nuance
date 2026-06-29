@@ -7,15 +7,61 @@ import { useEffect, useState } from "react";
 // shortcuts follow the user's keyboard layout regardless of the characters it
 // produces.
 export const KEY_CODES = [
-  "KeyQ", "KeyW", "KeyE", "KeyR", "KeyT", "KeyY", "KeyU", "KeyI", "KeyO", "KeyP",
-  "KeyA", "KeyS", "KeyD", "KeyF", "KeyG", "KeyH", "KeyJ", "KeyK", "KeyL",
-  "KeyZ", "KeyX", "KeyC", "KeyV", "KeyB", "KeyN", "KeyM",
+  "KeyQ",
+  "KeyW",
+  "KeyE",
+  "KeyR",
+  "KeyT",
+  "KeyY",
+  "KeyU",
+  "KeyI",
+  "KeyO",
+  "KeyP",
+  "KeyA",
+  "KeyS",
+  "KeyD",
+  "KeyF",
+  "KeyG",
+  "KeyH",
+  "KeyJ",
+  "KeyK",
+  "KeyL",
+  "KeyZ",
+  "KeyX",
+  "KeyC",
+  "KeyV",
+  "KeyB",
+  "KeyN",
+  "KeyM",
 ];
 
 const FALLBACK_LABELS = [
-  "Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P",
-  "A", "S", "D", "F", "G", "H", "J", "K", "L",
-  "Z", "X", "C", "V", "B", "N", "M",
+  "Q",
+  "W",
+  "E",
+  "R",
+  "T",
+  "Y",
+  "U",
+  "I",
+  "O",
+  "P",
+  "A",
+  "S",
+  "D",
+  "F",
+  "G",
+  "H",
+  "J",
+  "K",
+  "L",
+  "Z",
+  "X",
+  "C",
+  "V",
+  "B",
+  "N",
+  "M",
 ];
 
 interface KeyboardLayoutMap {
@@ -41,7 +87,9 @@ export function useKeyLabels(): string[] {
         .getLayoutMap()
         .then((map) => {
           if (cancelled) return;
-          setLabels(KEY_CODES.map((code, i) => (map.get(code) || FALLBACK_LABELS[i]).toUpperCase()));
+          setLabels(
+            KEY_CODES.map((code, i) => (map.get(code) || FALLBACK_LABELS[i]).toUpperCase()),
+          );
         })
         .catch(() => {});
       return () => {

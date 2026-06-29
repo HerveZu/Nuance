@@ -29,9 +29,16 @@ type GameButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> &
   Pick<VariantProps<typeof gameButtonVariants>, "size">;
 
 export function PrimaryButton({ className, size, ...props }: GameButtonProps) {
-  return <button {...props} className={cn(gameButtonVariants({ variant: "primary", size }), className)} />;
+  return (
+    <button
+      {...props}
+      className={cn(gameButtonVariants({ variant: "primary", size }), className)}
+    />
+  );
 }
 
 export function GhostButton({ className, size, ...props }: GameButtonProps) {
-  return <button {...props} className={cn(gameButtonVariants({ variant: "ghost", size }), className)} />;
+  return (
+    <button {...props} className={cn(gameButtonVariants({ variant: "ghost", size }), className)} />
+  );
 }

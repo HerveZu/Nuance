@@ -1,11 +1,11 @@
 import {
-  pgTable,
-  text,
-  integer,
   bigserial,
   boolean,
-  timestamp,
+  integer,
   jsonb,
+  pgTable,
+  text,
+  timestamp,
   unique,
 } from "drizzle-orm/pg-core";
 import type { Clue } from "@/game/engine";

@@ -26,7 +26,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${spaceGrotesk.variable} ${spaceMono.variable}`}>
+    <html
+      lang="en"
+      className={`${bricolage.variable} ${spaceGrotesk.variable} ${spaceMono.variable}`}
+    >
       <body>
         <Providers>{children}</Providers>
       </body>

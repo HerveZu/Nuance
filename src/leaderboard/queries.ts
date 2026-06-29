@@ -50,6 +50,12 @@ export async function getMyLeaderboardRow(me: {
     );
   return {
     rank: Number(better) + 1,
-    row: { id: me.id, name: me.name, image: me.image ?? null, avg: myAvg, streak: stat.currentStreak },
+    row: {
+      id: me.id,
+      name: me.name,
+      image: me.image ?? null,
+      avg: myAvg,
+      streak: stat.currentStreak,
+    },
   };
 }

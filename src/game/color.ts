@@ -44,7 +44,7 @@ export function rybToRgb(r: number, y: number, b: number): RGB {
 }
 
 function lin(c: number): number {
-  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
 }
 
 function rgbToOklab(rgb: RGB) {
@@ -54,7 +54,9 @@ function rgbToOklab(rgb: RGB) {
   const l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
   const m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
   const s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b;
-  const l_ = Math.cbrt(l), m_ = Math.cbrt(m), s_ = Math.cbrt(s);
+  const l_ = Math.cbrt(l),
+    m_ = Math.cbrt(m),
+    s_ = Math.cbrt(s);
   return {
     L: 0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_,
     a: 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_,
@@ -70,21 +72,35 @@ export function oklch(rgb: RGB): Oklch {
 }
 
 export function deltaE(a: RGB, b: RGB): number {
-  const x = rgbToOklab(a), y = rgbToOklab(b);
+  const x = rgbToOklab(a),
+    y = rgbToOklab(b);
   return Math.hypot(x.L - y.L, x.a - y.a, x.b - y.b);
 }
 
 const HUEWHEEL: [number, string][] = [
-  [29, "red"], [55, "orange"], [100, "yellow"], [125, "chartreuse"],
-  [145, "green"], [165, "emerald"], [195, "cyan"], [230, "azure"],
-  [265, "blue"], [300, "violet"], [330, "magenta"], [5, "rose"],
+  [29, "red"],
+  [55, "orange"],
+  [100, "yellow"],
+  [125, "chartreuse"],
+  [145, "green"],
+  [165, "emerald"],
+  [195, "cyan"],
+  [230, "azure"],
+  [265, "blue"],
+  [300, "violet"],
+  [330, "magenta"],
+  [5, "rose"],
 ];
 
 export function hueName(H: number): string {
-  let best = "red", bd = 999;
+  let best = "red",
+    bd = 999;
   HUEWHEEL.forEach(([deg, name]) => {
     const dd = Math.abs(((H - deg + 540) % 360) - 180);
-    if (dd < bd) { bd = dd; best = name; }
+    if (dd < bd) {
+      bd = dd;
+      best = name;
+    }
   });
   return best;
 }

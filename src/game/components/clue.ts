@@ -1,4 +1,4 @@
-import { Check, ArrowLeftRight, type LucideIcon } from "lucide-react";
+import { ArrowLeftRight, Check, type LucideIcon } from "lucide-react";
 import type { Clue } from "@/game/engine";
 
 // Single source of truth for the two "positive" clues. The colour, icon, and

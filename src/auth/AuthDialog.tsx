@@ -2,8 +2,14 @@
 
 import { useState } from "react";
 import { signIn, signUp } from "@/auth/auth-client";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -70,16 +76,39 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
           {mode === "signup" && (
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="auth-name">Display name</Label>
-              <Input id="auth-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" autoComplete="name" />
+              <Input
+                id="auth-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Your name"
+                autoComplete="name"
+              />
             </div>
           )}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="auth-email">Email</Label>
-            <Input id="auth-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" autoComplete="email" />
+            <Input
+              id="auth-email"
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              autoComplete="email"
+            />
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="auth-password">Password</Label>
-            <Input id="auth-password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete={mode === "signup" ? "new-password" : "current-password"} />
+            <Input
+              id="auth-password"
+              type="password"
+              required
+              minLength={8}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              autoComplete={mode === "signup" ? "new-password" : "current-password"}
+            />
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -91,7 +120,10 @@ export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
 
         <button
           type="button"
-          onClick={() => { setError(null); setMode(mode === "signup" ? "signin" : "signup"); }}
+          onClick={() => {
+            setError(null);
+            setMode(mode === "signup" ? "signin" : "signup");
+          }}
           className="text-sm text-sub hover:text-ink font-mono cursor-pointer"
         >
           {mode === "signup" ? "Have an account? Sign in" : "New here? Create an account"}

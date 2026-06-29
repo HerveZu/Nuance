@@ -1,6 +1,6 @@
 import "server-only";
-import type { Puzzle, PublicPuzzle } from "@/game/engine";
 import { dailyPuzzle, dateForOffset, dayNumber } from "@/game/daily";
+import type { PublicPuzzle, Puzzle } from "@/game/engine";
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
@@ -26,5 +26,5 @@ export function toPublicPuzzle(p: Puzzle): PublicPuzzle {
 export function dateLabelForOffset(offset: number): string {
   if (offset === 0) return "TODAY";
   const d = dateForOffset(offset);
-  return MONTHS[d.getMonth()] + " " + d.getDate();
+  return `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 }

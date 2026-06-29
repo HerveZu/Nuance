@@ -1,7 +1,7 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { AuthControl } from "@/auth/AuthControl";
 import { GhostButton } from "@/components/ui/buttons";
 import { PageHeading } from "@/components/ui/PageHeading";
-import { AuthControl } from "@/auth/AuthControl";
 
 interface HeaderProps {
   num: number | string;
@@ -14,12 +14,29 @@ interface HeaderProps {
   onReopen: () => void;
 }
 
-export function Header({ num, dateLabel, isToday, canGoBack, finished, onPrev, onNext, onReopen }: HeaderProps) {
+export function Header({
+  num,
+  dateLabel,
+  isToday,
+  canGoBack,
+  finished,
+  onPrev,
+  onNext,
+  onReopen,
+}: HeaderProps) {
   return (
     <div className="flex items-end justify-between gap-x-6 gap-y-3 flex-wrap pb-2 mb-3 md:pb-3 md:mb-5 shrink-0">
       <PageHeading
-        title={<>NUANCE<span className="text-sub">.day</span></>}
-        caption={<>#{num} · {dateLabel}</>}
+        title={
+          <>
+            NUANCE<span className="text-sub">.day</span>
+          </>
+        }
+        caption={
+          <>
+            #{num} · {dateLabel}
+          </>
+        }
       />
       <div className="flex gap-2 items-center">
         {finished && (

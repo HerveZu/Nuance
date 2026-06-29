@@ -1,21 +1,16 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
+import type { Subject } from "@/auth/guards";
 import { db } from "@/db/client";
 import { playSession, userStats } from "@/db/schema";
+import { type Clue, evaluate, GUESSES, type PublicPuzzle } from "@/game/engine";
 import {
+  dateLabelForOffset,
   getServerPuzzle,
   serverDayNumber,
   toPublicPuzzle,
-  dateLabelForOffset,
 } from "@/game/puzzle.server";
-import {
-  evaluate,
-  GUESSES,
-  type Clue,
-  type PublicPuzzle,
-} from "@/game/engine";
 import { offsetSchema, puzzleCompositionSchema } from "@/game/schemas";
-import type { Subject } from "@/auth/guards";
 
 // Transport-agnostic game core. Every function takes an explicit `subject` and
 // never reads cookies/headers, so it can be driven equally by the first-party
@@ -143,11 +138,7 @@ export async function submitGuess(
   await ensureRow(subject, day);
 
   return db.transaction(async (tx) => {
-    const [row] = await tx
-      .select()
-      .from(playSession)
-      .where(rowWhere(subject, day))
-      .for("update");
+    const [row] = await tx.select().from(playSession).where(rowWhere(subject, day)).for("update");
 
     const status = (row.status as GameStatus) ?? "composing";
     if (status !== "composing" || row.guesses.length >= GUESSES) {
@@ -163,11 +154,7 @@ export async function submitGuess(
     const guesses = [...row.guesses, composition];
     const clues = [...row.clues, fb.clues];
     const matchPercents = [...row.matchPercents, fb.matchPercent];
-    const newStatus: GameStatus = fb.win
-      ? "won"
-      : guesses.length >= GUESSES
-        ? "lost"
-        : "composing";
+    const newStatus: GameStatus = fb.win ? "won" : guesses.length >= GUESSES ? "lost" : "composing";
     const finished = newStatus !== "composing";
 
     await tx
@@ -199,12 +186,17 @@ export async function submitGuess(
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 async function recordStats(tx: Tx, userId: string, day: number, won: boolean, guesses: number) {
-  const [stat] = await tx.select().from(userStats).where(eq(userStats.userId, userId)).for("update");
+  const [stat] = await tx
+    .select()
+    .from(userStats)
+    .where(eq(userStats.userId, userId))
+    .for("update");
   const score = won ? guesses : 7; // a loss is one worse than the 6-guess max
 
   // Streak = consecutive days *played* (win or loss), based on today's day.
   let current: number;
-  if (stat?.lastPlayDay === day) current = stat.currentStreak; // defensive: already counted
+  if (stat?.lastPlayDay === day)
+    current = stat.currentStreak; // defensive: already counted
   else if (stat?.lastPlayDay === day - 1) current = (stat?.currentStreak ?? 0) + 1;
   else current = 1;
 

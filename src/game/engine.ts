@@ -1,4 +1,4 @@
-import { clamp, rybToRgb, deltaE, type RGB } from "./color";
+import { clamp, deltaE, type RGB, rybToRgb } from "./color";
 
 export interface Pigment {
   id: string;
@@ -103,7 +103,10 @@ export function getPigment(id: string): Pigment {
 }
 
 export function mix(recipe: string[], weights: number[]): RGB {
-  let r = 0, y = 0, b = 0, wsum = 0;
+  let r = 0,
+    y = 0,
+    b = 0,
+    wsum = 0;
   recipe.forEach((id, i) => {
     const w = weights[i] ?? 0;
     const c = PMAP[id].ryb;
@@ -126,7 +129,7 @@ export function pureMix(id: string): RGB {
 
 function matchPercent(dE: number): number {
   const d = clamp(dE / 0.5, 0, 1);
-  return Math.round(100 * Math.pow(1 - d, 1.6));
+  return Math.round(100 * (1 - d) ** 1.6);
 }
 
 export function evaluate(guess: string[], puzzle: Puzzle): Feedback {
@@ -137,12 +140,18 @@ export function evaluate(guess: string[], puzzle: Puzzle): Feedback {
   const clues: Clue[] = guess.map(() => "grey");
   const used = code.map(() => false);
   guess.forEach((g, i) => {
-    if (code[i] === g) { clues[i] = "green"; used[i] = true; }
+    if (code[i] === g) {
+      clues[i] = "green";
+      used[i] = true;
+    }
   });
   guess.forEach((g, i) => {
     if (clues[i] === "green") return;
     const j = code.findIndex((c, k) => !used[k] && c === g);
-    if (j >= 0) { clues[i] = "yellow"; used[j] = true; }
+    if (j >= 0) {
+      clues[i] = "yellow";
+      used[j] = true;
+    }
   });
   const rgb = mix(guess, puzzle.weights);
   const dE = deltaE(rgb, puzzle.target);
@@ -154,17 +163,28 @@ export function evaluate(guess: string[], puzzle: Puzzle): Feedback {
 }
 
 export function recipeText(canonical: string[], weights: number[]): string {
-  return canonical
-    .map((id, i) => weights[i] + "× " + PMAP[id].name)
-    .join("  ·  ");
+  return canonical.map((id, i) => `${weights[i]}× ${PMAP[id].name}`).join("  ·  ");
 }
 
-export function buildShareText(board: BoardEntry[], puzzle: Pick<Puzzle, "num">, won: boolean): string {
+export function buildShareText(
+  board: BoardEntry[],
+  puzzle: Pick<Puzzle, "num">,
+  won: boolean,
+): string {
   const rows = board.map((b) => {
-    const squares = b.fb.clues.map((c) => (
-      c === "green" ? "🟩" : c === "yellow" ? "🟨" : "⬜"
-    )).join("");
-    return squares + "  " + b.fb.matchPercent + "%";
+    const squares = b.fb.clues
+      .map((c) => (c === "green" ? "🟩" : c === "yellow" ? "🟨" : "⬜"))
+      .join("");
+    return `${squares}  ${b.fb.matchPercent}%`;
   });
-  return "Nuance #" + puzzle.num + "  " + (won ? board.length : "X") + "/" + GUESSES + "\n" + rows.join("\n");
+  return (
+    "Nuance #" +
+    puzzle.num +
+    "  " +
+    (won ? board.length : "X") +
+    "/" +
+    GUESSES +
+    "\n" +
+    rows.join("\n")
+  );
 }

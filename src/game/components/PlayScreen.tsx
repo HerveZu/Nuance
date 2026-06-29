@@ -1,22 +1,22 @@
-import { Delete, CornerDownLeft } from "lucide-react";
-import {
-  getPigment,
-  pureMix,
-  CELLS,
-  GUESSES,
-  type BoardEntry,
-  type Clue,
-  type PublicPuzzle,
-} from "@/game/engine";
-import { fgFor, rgbToCss } from "@/game/color";
-import { useKeyLabels } from "@/game/keyboard";
-import { ClueLegend } from "./ClueLegend";
-import { SectionLabel } from "./SectionLabel";
-import { hasClueIcon } from "./ClueIcon";
+import { CornerDownLeft, Delete } from "lucide-react";
 import { PrimaryButton } from "@/components/ui/buttons";
-import { Swatch } from "./Swatch";
-import { PaletteChip } from "./PaletteChip";
+import { fgFor, rgbToCss } from "@/game/color";
+import {
+  type BoardEntry,
+  CELLS,
+  type Clue,
+  GUESSES,
+  getPigment,
+  type PublicPuzzle,
+  pureMix,
+} from "@/game/engine";
+import { useKeyLabels } from "@/game/keyboard";
+import { hasClueIcon } from "./ClueIcon";
+import { ClueLegend } from "./ClueLegend";
 import { GuessRow, type RowCell } from "./GuessRow";
+import { PaletteChip } from "./PaletteChip";
+import { SectionLabel } from "./SectionLabel";
+import { Swatch } from "./Swatch";
 
 interface PlayScreenProps {
   puzzle: PublicPuzzle;
@@ -28,7 +28,15 @@ interface PlayScreenProps {
   submit: () => void;
 }
 
-export function PlayScreen({ puzzle, composition, board, finished, addDose, removeDose, submit }: PlayScreenProps) {
+export function PlayScreen({
+  puzzle,
+  composition,
+  board,
+  finished,
+  addDose,
+  removeDose,
+  submit,
+}: PlayScreenProps) {
   const keyLabels = useKeyLabels();
   const compFull = composition.length >= CELLS;
   const canGuess = composition.length === CELLS && !finished;
@@ -60,11 +68,18 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
       const cells: RowCell[] = b.recipe.map((id, idx) => {
         const rgb = pureMix(id);
         const clue = b.fb.clues[idx];
-        return { css: rgbToCss(rgb), clue, iconColor: hasClueIcon(clue) ? fgFor(rgb) : "transparent", weight: weights[idx] };
+        return {
+          css: rgbToCss(rgb),
+          clue,
+          iconColor: hasClueIcon(clue) ? fgFor(rgb) : "transparent",
+          weight: weights[idx],
+        };
       });
       const trailing = (
         <>
-          <span className="font-display font-bold text-md md:text-lg tabular-nums whitespace-nowrap">{b.fb.matchPercent}%</span>
+          <span className="font-display font-bold text-md md:text-lg tabular-nums whitespace-nowrap">
+            {b.fb.matchPercent}%
+          </span>
           <Swatch css={rgbToCss(b.fb.rgb)} className="w-8 md:w-10 self-stretch md:h-row shrink-0" />
         </>
       );
@@ -74,7 +89,16 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
     if (i === activeIndex) {
       const cells: RowCell[] = weights.map((w, idx) => {
         const id = composition[idx];
-        if (!id) return { css: "transparent", clue: "none" as Clue, iconColor: "transparent", weight: w, placeholder: true, label: "×" + w, textColor: "var(--color-sub)" };
+        if (!id)
+          return {
+            css: "transparent",
+            clue: "none" as Clue,
+            iconColor: "transparent",
+            weight: w,
+            placeholder: true,
+            label: `×${w}`,
+            textColor: "var(--color-sub)",
+          };
         const rgb = pureMix(id);
         return {
           css: rgbToCss(rgb),
@@ -98,7 +122,13 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
       return <GuessRow key={i} cells={cells} trailing={trailing} active onCellClick={removeDose} />;
     }
 
-    const cells: RowCell[] = weights.map((w) => ({ css: "transparent", clue: "none" as Clue, iconColor: "transparent", weight: w, placeholder: true }));
+    const cells: RowCell[] = weights.map((w) => ({
+      css: "transparent",
+      clue: "none" as Clue,
+      iconColor: "transparent",
+      weight: w,
+      placeholder: true,
+    }));
     return <GuessRow key={i} cells={cells} dimmed />;
   });
 
@@ -147,8 +177,12 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
       <div className="hidden md:flex justify-center mt-4">
         <span className="font-mono text-xs text-sub inline-flex items-center gap-1.5">
           press a key
-          <span className="inline-flex items-center gap-1">· <Delete size={12} strokeWidth={2} /> delete</span>
-          <span className="inline-flex items-center gap-1">· <CornerDownLeft size={12} strokeWidth={2} /> guess</span>
+          <span className="inline-flex items-center gap-1">
+            · <Delete size={12} strokeWidth={2} /> delete
+          </span>
+          <span className="inline-flex items-center gap-1">
+            · <CornerDownLeft size={12} strokeWidth={2} /> guess
+          </span>
         </span>
       </div>
     </div>
@@ -156,9 +190,7 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
 
   return (
     <div className="flex flex-col h-full min-h-0 justify-center md:block">
-      <div className="min-w-0 flex flex-col gap-2 md:block md:mb-8">
-        {rowEls}
-      </div>
+      <div className="min-w-0 flex flex-col gap-2 md:block md:mb-8">{rowEls}</div>
 
       <div className="hidden md:block md:mb-8">{desktopTargetSection}</div>
 

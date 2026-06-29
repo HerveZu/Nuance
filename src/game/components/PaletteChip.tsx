@@ -13,15 +13,29 @@ interface PaletteChipProps {
   onClick: () => void;
 }
 
-export function PaletteChip({ name, code, css, keyLabel, clue, iconColor, excluded, disabled, onClick }: PaletteChipProps) {
+export function PaletteChip({
+  name,
+  code,
+  css,
+  keyLabel,
+  clue,
+  iconColor,
+  excluded,
+  disabled,
+  onClick,
+}: PaletteChipProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
       disabled={disabled}
       style={{ opacity: disabled ? 0.5 : excluded ? 0.45 : 1 }}
       className="w-[58px] md:w-[78px] flex-none text-left border border-line rounded-card overflow-hidden bg-surface p-0 cursor-pointer disabled:cursor-not-allowed"
     >
-      <div className="h-7 md:h-[30px] relative" style={{ background: css, filter: excluded ? "grayscale(1)" : "none" }}>
+      <div
+        className="h-7 md:h-[30px] relative"
+        style={{ background: css, filter: excluded ? "grayscale(1)" : "none" }}
+      >
         <span className="absolute top-[3px] left-[3px] min-w-[15px] h-[15px] px-[3px] rounded-[3px] bg-veil text-clue-fg hidden md:flex items-center justify-center font-mono text-2xs font-bold uppercase">
           {keyLabel}
         </span>
@@ -31,8 +45,24 @@ export function PaletteChip({ name, code, css, keyLabel, clue, iconColor, exclud
         {excluded && (
           <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
             <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-              <line x1="0" y1="0" x2="100" y2="100" stroke="var(--color-veil)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
-              <line x1="100" y1="0" x2="0" y2="100" stroke="var(--color-veil)" strokeWidth="3" vectorEffect="non-scaling-stroke" />
+              <line
+                x1="0"
+                y1="0"
+                x2="100"
+                y2="100"
+                stroke="var(--color-veil)"
+                strokeWidth="3"
+                vectorEffect="non-scaling-stroke"
+              />
+              <line
+                x1="100"
+                y1="0"
+                x2="0"
+                y2="100"
+                stroke="var(--color-veil)"
+                strokeWidth="3"
+                vectorEffect="non-scaling-stroke"
+              />
             </svg>
           </span>
         )}

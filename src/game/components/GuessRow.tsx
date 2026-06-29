@@ -33,16 +33,28 @@ export function GuessRow({ cells, trailing, active, dimmed, onCellClick }: Guess
           : "border border-line";
         const clickable = active && !cell.placeholder && !!onCellClick;
         const common = `h-full md:h-row min-h-0 rounded-card overflow-hidden flex items-center justify-center ${border}`;
-        const style = { background: cell.css, flexGrow: cell.weight, flexBasis: 0 } as React.CSSProperties;
+        const style = {
+          background: cell.css,
+          flexGrow: cell.weight,
+          flexBasis: 0,
+        } as React.CSSProperties;
         const content = cell.label ? (
+          // biome-ignore lint/correctness/useJsxKeyInIterable: keyed by the parent <button>/<div>
           <span className="font-mono text-2xs font-bold" style={{ color: cell.textColor }}>
             {cell.label}
           </span>
         ) : (
+          // biome-ignore lint/correctness/useJsxKeyInIterable: keyed by the parent <button>/<div>
           <ClueIcon clue={cell.clue} color={cell.iconColor} size={26} />
         );
         return clickable ? (
-          <button key={i} onClick={() => onCellClick!(i)} className={`${common} p-0 cursor-pointer`} style={style}>
+          <button
+            key={i}
+            type="button"
+            onClick={() => onCellClick?.(i)}
+            className={`${common} p-0 cursor-pointer`}
+            style={style}
+          >
             {content}
           </button>
         ) : (

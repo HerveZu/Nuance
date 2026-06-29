@@ -32,6 +32,11 @@ export interface Puzzle {
   num: number | string;
 }
 
+// The puzzle shape that is safe to send to the browser: everything except the
+// secret `canonical` recipe. The client renders the palette/target/weights and
+// can preview its own mixes from these, but can never read the answer.
+export type PublicPuzzle = Omit<Puzzle, "canonical">;
+
 export interface BoardEntry {
   recipe: string[];
   fb: Feedback;
@@ -154,7 +159,7 @@ export function recipeText(canonical: string[], weights: number[]): string {
     .join("  ·  ");
 }
 
-export function buildShareText(board: BoardEntry[], puzzle: Puzzle, won: boolean): string {
+export function buildShareText(board: BoardEntry[], puzzle: Pick<Puzzle, "num">, won: boolean): string {
   const rows = board.map((b) => {
     const squares = b.fb.clues.map((c) => (
       c === "green" ? "🟩" : c === "yellow" ? "🟨" : "⬜"

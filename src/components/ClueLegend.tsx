@@ -1,4 +1,4 @@
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ArrowLeftRight } from "lucide-react";
 
 function LegendItem({ color, icon, children }: { color: string; icon: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -24,7 +24,7 @@ export function ClueLegend({
       <LegendItem color="var(--color-clue-green)" icon={<Check size={11} strokeWidth={3} />}>
         Right pigment &amp; cell
       </LegendItem>
-      <LegendItem color="var(--color-clue-yellow)" icon={<ChevronsUpDown size={11} strokeWidth={3} />}>
+      <LegendItem color="var(--color-clue-yellow)" icon={<ArrowLeftRight size={11} strokeWidth={3} />}>
         Right pigment, wrong cell
       </LegendItem>
     </div>

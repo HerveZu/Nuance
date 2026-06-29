@@ -20,7 +20,7 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Nuance — Color Mixing Puzzle",
+  title: "Nuance.day — Color Mixing Puzzle",
   description: "A daily color mixing puzzle. Mix pigments to match the target color.",
 };
 

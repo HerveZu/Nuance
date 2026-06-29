@@ -48,9 +48,9 @@ export interface Stats {
 
 export const GUESSES = 6;
 // The recipe is an ordered row of cells. Order matters because each cell
-// carries its own weight in the mix — a per-day value of 1..6. A heavy cell
+// carries its own weight in the mix — a per-day value of 1..9. A heavy cell
 // dominates the blend; a light one barely tints it.
-export const CELLS = 4;
+export const CELLS = 5;
 
 export const POOL: Pigment[] = [
   { id: "R", name: "Vermilion", code: "VRM-01", ryb: [1, 0, 0], fam: "red" },

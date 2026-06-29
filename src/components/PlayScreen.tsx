@@ -72,11 +72,11 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
   });
 
   const targetBand = (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-3 md:gap-5">
       <div>
         <SectionLabel className="mb-2">TARGET</SectionLabel>
         <div
-          className="border border-line rounded-card shadow-overlay h-[104px]"
+          className="border border-line rounded-card md:shadow-overlay h-11 md:h-[104px]"
           style={{ background: rgbToCss(puzzle.target) }}
         />
       </div>
@@ -98,80 +98,90 @@ export function PlayScreen({ puzzle, composition, board, finished, addDose, remo
     </div>
   );
 
+  const inputCells = (
+    <div className="flex gap-3 items-start flex-wrap">
+      <div className="flex gap-[7px] flex-1 max-w-[360px]">
+        {weights.map((w, i) => {
+          const id = composition[i];
+          return (
+            <div key={i} className="flex flex-col" style={{ flexGrow: w, flexBasis: 0 }}>
+              {id ? (
+                <button
+                  onClick={() => removeDose(i)}
+                  disabled={finished}
+                  className="h-10 w-full border border-line rounded-card p-0 font-mono text-2xs font-bold cursor-pointer disabled:cursor-default overflow-hidden"
+                  style={{ background: rgbToCss(pureMix(id)), color: fgFor(pureMix(id)) }}
+                >
+                  {getPigment(id).code.split("-")[0]}
+                </button>
+              ) : (
+                <div className="h-10 w-full border border-dashed border-sub rounded-card" />
+              )}
+              <span className="font-mono text-2xs text-sub text-center mt-1">×{w}</span>
+            </div>
+          );
+        })}
+      </div>
+      <PrimaryButton
+        onClick={submit}
+        disabled={!canGuess}
+        style={{ opacity: canGuess ? 1 : 0.4 }}
+        className="ml-auto h-10 inline-flex items-center justify-center text-base tracking-[0.08em] px-5"
+      >
+        Guess · {composition.length}/{CELLS}
+      </PrimaryButton>
+    </div>
+  );
+
+  const paletteBlock = (
+    <div>
+      <div className="hidden md:flex justify-end mb-3">
+        <span className="font-mono text-xs text-sub inline-flex items-center gap-1.5">
+          press a key
+          <span className="inline-flex items-center gap-1">· <Delete size={12} strokeWidth={2} /> delete</span>
+          <span className="inline-flex items-center gap-1">· <CornerDownLeft size={12} strokeWidth={2} /> guess</span>
+        </span>
+      </div>
+      <div className="flex gap-[9px] flex-wrap justify-center">
+        {puzzle.palette.map((id, i) => {
+          const p = getPigment(id);
+          const rgb = pureMix(id);
+          const hint = pigHint[id];
+          const excluded = !hasClueIcon(hint) && !!triedGrey[id];
+          const disabled = compFull || finished;
+          return (
+            <PaletteChip
+              key={id}
+              name={p.name}
+              code={p.code}
+              css={rgbToCss(rgb)}
+              keyLabel={keyLabels[i] || ""}
+              clue={hint}
+              iconColor={hasClueIcon(hint) ? fgFor(rgb) : "transparent"}
+              excluded={excluded}
+              disabled={disabled}
+              onClick={() => addDose(id)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+
   return (
     <div>
-      <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_300px] mb-12">
-        <div>
+      <div className="flex flex-col gap-6 md:grid md:gap-10 md:grid-cols-[minmax(0,1fr)_300px] mb-10 md:mb-12">
+        <div className="order-2 md:order-none">
           {rows.map((row, i) => (
             <GuessRow key={i} {...row} />
           ))}
         </div>
-        {targetBand}
+        <div className="order-1 md:order-none">{targetBand}</div>
       </div>
 
-      <div>
-        <div className="flex justify-end mb-3">
-          <span className="font-mono text-xs text-sub inline-flex items-center gap-1.5">
-            press a key
-            <span className="inline-flex items-center gap-1">· <Delete size={12} strokeWidth={2} /> delete</span>
-            <span className="inline-flex items-center gap-1">· <CornerDownLeft size={12} strokeWidth={2} /> guess</span>
-          </span>
-        </div>
-        <div className="flex gap-[9px] flex-wrap justify-center mb-9">
-          {puzzle.palette.map((id, i) => {
-            const p = getPigment(id);
-            const rgb = pureMix(id);
-            const hint = pigHint[id];
-            const excluded = !hasClueIcon(hint) && !!triedGrey[id];
-            const disabled = compFull || finished;
-            return (
-              <PaletteChip
-                key={id}
-                name={p.name}
-                code={p.code}
-                css={rgbToCss(rgb)}
-                keyLabel={keyLabels[i] || ""}
-                clue={hint}
-                iconColor={hasClueIcon(hint) ? fgFor(rgb) : "transparent"}
-                excluded={excluded}
-                disabled={disabled}
-                onClick={() => addDose(id)}
-              />
-            );
-          })}
-        </div>
-        <div className="flex gap-3 items-center flex-wrap">
-          <div className="flex gap-[7px] flex-1 max-w-[360px]">
-            {weights.map((w, i) => {
-              const id = composition[i];
-              return (
-                <div key={i} className="flex flex-col" style={{ flexGrow: w, flexBasis: 0 }}>
-                  {id ? (
-                    <button
-                      onClick={() => removeDose(i)}
-                      disabled={finished}
-                      className="h-10 w-full border border-line rounded-card p-0 font-mono text-2xs font-bold cursor-pointer disabled:cursor-default overflow-hidden"
-                      style={{ background: rgbToCss(pureMix(id)), color: fgFor(pureMix(id)) }}
-                    >
-                      {getPigment(id).code.split("-")[0]}
-                    </button>
-                  ) : (
-                    <div className="h-10 w-full border border-dashed border-sub rounded-card" />
-                  )}
-                  <span className="font-mono text-2xs text-sub text-center mt-1">×{w}</span>
-                </div>
-              );
-            })}
-          </div>
-          <PrimaryButton
-            onClick={submit}
-            disabled={!canGuess}
-            style={{ opacity: canGuess ? 1 : 0.4 }}
-            className="ml-auto text-base tracking-[0.08em] px-5 py-2.5"
-          >
-            Guess · {composition.length}/{CELLS}
-          </PrimaryButton>
-        </div>
+      <div className="flex flex-col gap-9">
+        <div className="order-1 md:order-2">{inputCells}</div>
+        <div className="order-2 md:order-1">{paletteBlock}</div>
       </div>
     </div>
   );

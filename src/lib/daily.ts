@@ -1,7 +1,7 @@
 import { POOL, CELLS, mix, pureMix, type Theme, type Puzzle } from "./engine";
 import { oklch, deltaE, type RGB } from "./color";
 
-const MIN_PALETTE_DIST = 0.03;
+const MIN_PALETTE_DIST = 0.05;
 const EPOCH = Date.UTC(2026, 1, 8);
 
 function mulberry32(a: number): () => number {
@@ -49,23 +49,23 @@ interface Archetype {
 // size) so the daily palette has a distinct character instead of every day
 // sampling the same broad spread of the pool.
 const ARCHETYPES: Archetype[] = [
-  { title: "WARM SPECTRUM", sub: "Reds and yellows run hot.", weights: { red: 4, orange: 3, yellow: 3, magenta: 2, earth: 2 }, neutralsMax: 1, size: [13, 17] },
-  { title: "COOL FRONT", sub: "Blues and greens lead the wheel.", weights: { blue: 4, green: 3, violet: 3, magenta: 1 }, neutralsMax: 2, size: [12, 15] },
-  { title: "THE EARTHS", sub: "Grounded, muted territory.", weights: { earth: 5, orange: 2, yellow: 2, red: 2, green: 1 }, neutralsMax: 1, size: [12, 16] },
-  { title: "SUNSET", sub: "Warm analogous — reds melting into gold.", weights: { red: 4, orange: 4, yellow: 3, magenta: 3 }, neutralsMax: 1, size: [11, 13] },
-  { title: "FOREST & SKY", sub: "Greens and blues, leaf to horizon.", weights: { green: 4, blue: 3, yellow: 2, earth: 3 }, neutralsMax: 1, size: [13, 16] },
-  { title: "JEWEL BOX", sub: "Deep, saturated violets, blues and greens.", weights: { violet: 3, blue: 3, magenta: 3, green: 2, red: 2 }, neutralsMax: 1, size: [12, 15] },
-  { title: "BRUISED VIOLETS", sub: "Violets and magentas, low and moody.", weights: { violet: 4, magenta: 3, blue: 2, red: 2 }, neutralsMax: 1, size: [11, 14] },
-  { title: "SEA GLASS", sub: "Soft greens and cyans, washed pale.", weights: { green: 4, blue: 4, yellow: 1 }, neutralsMax: 2, size: [11, 14] },
-  { title: "AUTUMN", sub: "Earths, ochre and rust turning over.", weights: { earth: 4, orange: 3, red: 3, yellow: 2 }, neutralsMax: 1, size: [13, 16] },
-  { title: "NOCTURNE", sub: "Blues and violets sinking into black.", weights: { blue: 4, violet: 3, magenta: 1 }, neutralsMax: 1, size: [10, 13] },
-  { title: "CITRUS", sub: "Bright yellows, oranges and lime.", weights: { yellow: 4, orange: 3, green: 2 }, neutralsMax: 1, size: [9, 12] },
-  { title: "ROSE GARDEN", sub: "Reds and pinks with a leaf of green.", weights: { red: 3, magenta: 3, violet: 1, green: 1 }, neutralsMax: 1, size: [11, 14] },
-  { title: "MEADOW", sub: "Fresh greens and yellows under open sky.", weights: { green: 4, yellow: 3, earth: 1, blue: 1 }, neutralsMax: 1, size: [13, 16] },
-  { title: "TROPICAL", sub: "Vivid cyan, green and magenta, no muting.", weights: { green: 3, blue: 3, magenta: 2, orange: 2 }, neutralsMax: 0, size: [11, 14] },
-  { title: "GLACIER", sub: "Pale blues and ice, barely tinted.", weights: { blue: 4, green: 2, violet: 1 }, neutralsMax: 2, size: [10, 13] },
-  { title: "PURE PIGMENT", sub: "No white, no black — shift hue to lighten or shade.", weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 1, earth: 1 }, neutralsMax: 0, size: [12, 15] },
-  { title: "FULL WHEEL", sub: "A broad spread across the spectrum.", weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 2, earth: 2 }, neutralsMax: 2, size: [16, 20] },
+  { title: "WARM SPECTRUM", sub: "Reds and yellows run hot.", weights: { red: 4, orange: 3, yellow: 3, magenta: 2, earth: 2 }, neutralsMax: 1, size: [8, 11] },
+  { title: "COOL FRONT", sub: "Blues and greens lead the wheel.", weights: { blue: 4, green: 3, violet: 3, magenta: 1 }, neutralsMax: 2, size: [8, 10] },
+  { title: "THE EARTHS", sub: "Grounded, muted territory.", weights: { earth: 5, orange: 2, yellow: 2, red: 2, green: 1 }, neutralsMax: 1, size: [8, 10] },
+  { title: "SUNSET", sub: "Warm analogous — reds melting into gold.", weights: { red: 4, orange: 4, yellow: 3, magenta: 3 }, neutralsMax: 1, size: [7, 9] },
+  { title: "FOREST & SKY", sub: "Greens and blues, leaf to horizon.", weights: { green: 4, blue: 3, yellow: 2, earth: 3 }, neutralsMax: 1, size: [8, 10] },
+  { title: "JEWEL BOX", sub: "Deep, saturated violets, blues and greens.", weights: { violet: 3, blue: 3, magenta: 3, green: 2, red: 2 }, neutralsMax: 1, size: [8, 10] },
+  { title: "BRUISED VIOLETS", sub: "Violets and magentas, low and moody.", weights: { violet: 4, magenta: 3, blue: 2, red: 2 }, neutralsMax: 1, size: [7, 9] },
+  { title: "SEA GLASS", sub: "Soft greens and cyans, washed pale.", weights: { green: 4, blue: 4, yellow: 1 }, neutralsMax: 2, size: [7, 9] },
+  { title: "AUTUMN", sub: "Earths, ochre and rust turning over.", weights: { earth: 4, orange: 3, red: 3, yellow: 2 }, neutralsMax: 1, size: [8, 10] },
+  { title: "NOCTURNE", sub: "Blues and violets sinking into black.", weights: { blue: 4, violet: 3, magenta: 1 }, neutralsMax: 1, size: [7, 9] },
+  { title: "CITRUS", sub: "Bright yellows, oranges and lime.", weights: { yellow: 4, orange: 3, green: 2 }, neutralsMax: 1, size: [6, 8] },
+  { title: "ROSE GARDEN", sub: "Reds and pinks with a leaf of green.", weights: { red: 3, magenta: 3, violet: 1, green: 1 }, neutralsMax: 1, size: [7, 9] },
+  { title: "MEADOW", sub: "Fresh greens and yellows under open sky.", weights: { green: 4, yellow: 3, earth: 1, blue: 1 }, neutralsMax: 1, size: [8, 10] },
+  { title: "TROPICAL", sub: "Vivid cyan, green and magenta, no muting.", weights: { green: 3, blue: 3, magenta: 2, orange: 2 }, neutralsMax: 0, size: [7, 9] },
+  { title: "GLACIER", sub: "Pale blues and ice, barely tinted.", weights: { blue: 4, green: 2, violet: 1 }, neutralsMax: 2, size: [6, 8] },
+  { title: "PURE PIGMENT", sub: "No white, no black — shift hue to lighten or shade.", weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 1, earth: 1 }, neutralsMax: 0, size: [8, 10] },
+  { title: "FULL WHEEL", sub: "A broad spread across the spectrum.", weights: { red: 2, orange: 2, yellow: 2, green: 2, blue: 2, violet: 2, magenta: 2, earth: 2 }, neutralsMax: 2, size: [10, 13] },
 ];
 
 function weightedPick(fams: string[], weights: Record<string, number>, rng: () => number): string {
@@ -116,10 +116,11 @@ function pickDailyPalette(rng: () => number): { palette: string[]; theme: Theme 
   return { palette: picked, theme: { title: arch.title, sub: arch.sub } };
 }
 
-// Each cell gets a distinct weight, drawn from 1..6 (no duplicates), so the
-// four cells always pull on the mix by different amounts.
+// Each cell gets a distinct weight, drawn from 1..9 (no duplicates), so the
+// five cells always pull on the mix by different amounts — the wider range
+// spreads the doses further apart for more pronounced heavy/light contrast.
 function genWeights(rng: () => number): number[] {
-  return shuffle([1, 2, 3, 4, 5, 6], rng).slice(0, CELLS);
+  return shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9], rng).slice(0, CELLS);
 }
 
 function genRecipe(rng: () => number, palette: string[], weights: number[]): { recipe: string[]; target: RGB } {

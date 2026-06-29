@@ -20,12 +20,19 @@ function resolveBaseURL(): string | undefined {
   return undefined;
 }
 
-// Trust the Vercel origins this app can be reached on (preview + production) so
-// cross-origin auth requests aren't rejected when baseURL is the canonical
-// production domain but the app is opened on a preview deployment URL.
+// Trust the Vercel origins this app can be reached on so cross-origin auth
+// requests aren't rejected when baseURL is the canonical production domain but
+// the app is opened on a different deployment URL. The explicit production +
+// per-deployment hosts cover the canonical cases; the `*.vercel.app` wildcard
+// (better-auth matches it via wildcardMatch) also covers the git-branch and
+// preview aliases, whose hostnames Vercel never exposes as env vars. Note this
+// only satisfies better-auth's origin/callbackURL check — the OAuth redirect_uri
+// is still built from baseURL and must be registered in the Discord app.
 const trustedOrigins = [env.VERCEL_PROJECT_PRODUCTION_URL, env.VERCEL_URL]
   .filter((host): host is string => !!host)
   .map((host) => `https://${host}`);
+
+if (env.VERCEL_ENV) trustedOrigins.push("https://*.vercel.app");
 
 export const auth = betterAuth({
   baseURL: resolveBaseURL(),

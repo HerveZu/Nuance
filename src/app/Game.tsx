@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useNuance } from "@/hooks/useNuance";
 import { Header } from "@/components/Header";
 import { LaunchScreen } from "@/components/LaunchScreen";
@@ -8,6 +9,10 @@ import { ResultsOverlay } from "@/components/ResultsOverlay";
 
 export default function Game() {
   const n = useNuance();
+
+  useEffect(() => {
+    document.title = `Nuance.day #${n.puzzle.num}`;
+  }, [n.puzzle.num]);
 
   if (!n.ready) return <div className="min-h-screen bg-ground" />;
 
